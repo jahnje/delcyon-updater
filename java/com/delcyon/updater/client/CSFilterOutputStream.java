@@ -7,9 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.Level;
-
-import org.GNOME.Accessibility.Application;
 
 /**
  * @author jeremiah

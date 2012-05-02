@@ -4,15 +4,14 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.logging.Level;
 
-import org.GNOME.Accessibility.Application;
-import org.GNOME.Accessibility.Table;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.sun.tools.javac.util.Name.Table;
 
 
 
