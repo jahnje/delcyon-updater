@@ -1,0 +1,201 @@
+
+
+<project name="Updater Build File" default="dist" basedir="." >
+	<echo>Getting build number from file</echo>
+	<property file="build.number"/>
+	<property name="product.name" value="updater"/>
+	<property name="version" value="${version.major}.${version.minor}"/>
+	<echo>Building version ${version}.${build.number}.${patch.number}</echo>
+	<property name="src.dir" value="./java"/>
+	<property name="build.dir" value="distribution"/>
+	<property name="test.dir" value="tests" />	
+	<property name="build.classes" value="${build.dir}/classes" />	
+	<property name="lib.dir" value="./lib"/>
+	<property name="otherlib.dir" value="./lib-ext"/>
+	<property name="required.libraries" value="${lib.dir}/jaxen-core.jar ${lib.dir}/jaxen-jdom.jar ${lib.dir}/jdom.jar ${lib.dir}/saxpath.jar"/>
+	<property name="resource.dir" value="./resources"/>
+	
+	
+	
+		
+	<property name="build_number.file" value="build.number"/>
+	<property name="temp_build_number.file" value="build.number.tmp"/>
+	
+	<path id="compile.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+		<fileset dir="${otherlib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+
+	
+	
+
+	
+
+	<!-- this creates the directories for the compiled code -->
+	<target name="prepare">
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${build.classes}"/>
+		<mkdir dir="${build.dir}/help"/>
+		
+		<condition property="patch.number.operation" else="=" value="+">
+			<available file="./CVS/Tag"/>
+		</condition>
+		<condition property="build.number.operation" else="+" value="=">
+			<available file="./CVS/Tag" />	
+		</condition>
+		
+		<echo>Making temp build number file</echo>
+		<copy overwrite="true" tofile="${temp_build_number.file}" file="${build_number.file}" />
+		 	
+		<propertyfile file="${temp_build_number.file}">
+			<entry key="version.major" type="int" value="1" />
+			<entry key="version.minor" type="int" value="0" />			
+			<entry key="build.number" type="int" operation="${build.number.operation}"  default="1" />
+			<entry key="patch.number" type="int" operation="${patch.number.operation}"  default="1" />
+		</propertyfile>
+		<echo>Storing version file</echo>
+		<propertyfile file="${resource.dir}/version.properties">
+			<entry key="version.date" type="date" value="now" />
+			<entry key="version" value="${version}.${build.number}.${patch.number}" />
+			<entry key="product.name" value="${product.name}" />
+		</propertyfile>
+	</target>
+
+	
+	
+	<!-- this removes all compiled code -->
+	<target name="clean">
+		<delete dir="${test_build.dir}"/>
+		<delete dir="${build.dir}"/>	
+		<delete dir="META-INF"/>	
+		<delete file="${temp_build_number.file}"/>
+		<delete file="*.log"/>
+		
+	</target>
+
+	<!-- this compiles everything -->
+	<target name="compile" depends="prepare">
+		<javac srcdir="${src.dir}" destdir="${build.classes}" debug="on" >
+			<classpath refid="compile.classpath"/>
+		</javac>
+	</target>
+
+	<target name="prepBuild">
+				<property name="isPatch" value="false"/>
+			</target>
+			
+			<target name="prepPatch">
+				<property name="isPatch" value="true"/>
+			</target>
+			<target name="prepMajor">
+				<property name="isMajor" value="true"/>
+			</target>
+			<target name="prepMinor">
+				<property name="isMinor" value="true"/>
+			</target>
+	
+<!--START SVN TARGETS-->
+	
+	<!--issue an svn commit to make, and create a new version/copy that we can branch off of if we need to-->
+	<target name="svn_commit" >		
+		<exec executable="svn" failifexecutionfails="true">
+    		<arg value="commit"/>
+			<arg value="-m"/>
+			<arg value="VERSION: ${version}.${build.number}.${patch.number}  MD5=${md5}"/>
+		</exec>
+		<exec executable="svn" failifexecutionfails="true">
+        	<arg value="copy"/>
+            <arg value="."/>
+			<arg value="file:///svn/${product.name}/versions/${version}.${build.number}.${patch.number}"/>
+            <arg value="-m"/>
+            <arg value="VERSION: ${version}.${build.number}.${patch.number} MD5=${md5}"/>
+        </exec>
+	
+	</target>
+	
+	<!-- run svn update -->
+	<target name="svn_update" >		
+		<exec executable="svn" failifexecutionfails="true">
+    		<arg value="update"/>
+		</exec>
+	</target>
+	
+	<!--END SVN TARGETS-->
+
+	<target name="build" depends="prepBuild,create_zip">
+				<antcall inheritall="yes" target="incrementBuildNumber"/>
+				<antcall inheritall="yes" target="svn_commit"/>
+
+			</target>
+			
+			<target name="patch" depends="prepPatch,create_zip">
+				<antcall inheritall="yes" target="incrementBuildNumber"/>
+				<antcall inheritall="yes" target="svn_commit"/>
+			</target>
+			
+			<target name="major" depends="prepMajor,create_zip">
+				<antcall inheritall="yes" target="incrementBuildNumber"/>
+				<antcall inheritall="yes" target="svn_commit"/>
+			</target>
+
+			
+			<target name="minor" depends="prepMinor,create_zip">
+				<antcall inheritall="yes" target="incrementBuildNumber"/>
+				<antcall inheritall="yes" target="svn_commit"/>
+			</target>
+	
+
+	<!-- This builds the Extractor that goes on the Client machine -->
+	<target name="dist" depends="create_jar">			
+		<antcall inheritall="yes" target="incrementBuildNumber"/>
+
+	</target>
+
+	<target name="create_zip" depends="create_jar" unless="zipCreated">
+			<antcall inheritall="yes" target="svn_update"/>
+				<property name="zipCreated" value="true"/>
+			</target>
+	
+	<target name="create_jar" depends="compile">
+		<echo>Building Jar File</echo>
+				<jar destfile="${build.dir}/${product.name}-${version}.${build.number}.${patch.number}.jar" >
+					<fileset dir="${build.classes}" id="id">
+						<include name="com/delcyon/**/*.class" />
+						<exclude name="com/delcyon/**/*Test.class" />
+						<exclude name="com/delcyon/**/Test*.class" />
+					</fileset>
+					<!--fileset dir="schema">
+						<include name="**/*.sql" />
+						<include name="**/*.xsd" />
+					</fileset-->
+					<fileset dir="${resource.dir}">
+						<include name="*" />
+					</fileset>
+					<fileset dir="${lib.dir}">
+						<include name="*.jar" />
+					</fileset>
+					<manifest>
+						<attribute name="Main-Class" value="com.delcyon.updater.client.UpdaterClient" />
+						<attribute name="Class-Path" value="${required.libraries}" />
+					</manifest>					
+				</jar>
+		<copy overwrite="true" file="${build.dir}/${product.name}-${version}.${build.number}.${patch.number}.jar" tofile="${build.dir}/${product.name}.jar"/>		
+	</target>
+	
+	
+	
+	
+	<target name="incrementBuildNumber">
+		<echo>replaceing temp build number with temp</echo>
+		<copy overwrite="true" file="${temp_build_number.file}" tofile="${build_number.file}" />
+		<delete verbose="true" file="${temp_build_number.file}"/>
+	</target>
+	
+	
+	
+
+</project>

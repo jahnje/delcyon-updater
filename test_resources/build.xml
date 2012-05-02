@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="TestTask" basedir=".." default="test">
+	<property name="build.dir" value="./build"/>
+	<property name="lib.dir" value="./lib"/>
+	<property name="otherlib.dir" value="./lib-ext"/>
+	<path id="compile.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+		<fileset dir="${otherlib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+	<taskdef name="InstallerBuildTask" classname="com.delcyon.updater.client.InstallerBuildTask"  classpathref="compile.classpath" classpath="${build.dir}"/>
+	<taskdef name="CallURLBuildTask" classname="com.delcyon.updater.client.CallURLBuildTask"  classpathref="compile.classpath" classpath="${build.dir}"/>
+	<typedef name="Parameter" classname="com.delcyon.updater.client.CallURLBuildTask$Parameter"  classpathref="compile.classpath" classpath="${build.dir}"/>
+	<target name="test" description="Taskdef's the Find-Task">
+		<InstallerBuildTask distributionfilename="test.jar" >
+			<fileset file="test_resources/test.jar" />
+			<applicationDescriptor name="com.delcyon.TestApplication" installDirectory="JIMAS Test"  executable="test.jar" icon="test.ico">
+
+			</applicationDescriptor>
+		</InstallerBuildTask>
+	</target>
+	
+	<target name="URL" description="Taskdef's the Find-Task">
+		<CallURLBuildTask URL="http://www.delcyon.com/dsm/data-admin/version.jsp">
+			<Parameter name="product" value="2"/>
+			<Parameter name="newMajor" value="2"/>
+			<Parameter name="newMinor" value="2"/>
+			<Parameter name="newBuild" value="2"/>
+			<Parameter name="newPatch" value="2"/>
+			<Parameter name="updateVersions" value="Add Version"/>
+		</CallURLBuildTask>
+	</target>
+
+
+</project>
