@@ -17,22 +17,13 @@
 	<target name="test" description="Taskdef's the Find-Task">
 		<InstallerBuildTask distributionfilename="test.jar" >
 			<fileset file="test_resources/test.jar" />
-			<applicationDescriptor name="com.delcyon.TestApplication" installDirectory="JIMAS Test"  executable="test.jar" icon="test.ico">
+			<applicationDescriptor name="com.delcyon.TestApplication" installDirectory="Test"  executable="test.jar" icon="test.ico">
 
 			</applicationDescriptor>
 		</InstallerBuildTask>
 	</target>
 	
-	<target name="URL" description="Taskdef's the Find-Task">
-		<CallURLBuildTask URL="http://www.delcyon.com/dsm/data-admin/version.jsp">
-			<Parameter name="product" value="2"/>
-			<Parameter name="newMajor" value="2"/>
-			<Parameter name="newMinor" value="2"/>
-			<Parameter name="newBuild" value="2"/>
-			<Parameter name="newPatch" value="2"/>
-			<Parameter name="updateVersions" value="Add Version"/>
-		</CallURLBuildTask>
-	</target>
+	
 
 
 </project>

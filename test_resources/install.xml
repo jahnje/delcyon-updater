@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<updater>    
+    <install>        
+        <getPreference preferenceClass="com.delcyon.updater.client.Test" preference="install.dir" property="install.dir"/>
+        <ask test="${install.dir} == null" name="install.dir" default="." message="Please enter the path to where you want to install the application" answerType="String"/>
+        <write packageFile="test.jar" systemFile="${install.dir}/test.jar" update.property="test.jar.updated"/>
+        <command test="${test.jar.updated == true}" exec="chmod +x ${install.dir}/test.jar"/>        
+    </install>
+</updater>

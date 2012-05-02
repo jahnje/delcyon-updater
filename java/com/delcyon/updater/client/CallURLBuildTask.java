@@ -17,6 +17,7 @@ public class CallURLBuildTask extends Task {
 	
 	public void execute() throws BuildException {
 		log("Calling URL: "+URL);
+		URL url = null;
 		try {
 			String tempURL = URL;
 			if (parameterList.size() != 0){
@@ -25,7 +26,7 @@ public class CallURLBuildTask extends Task {
 					tempURL+= ""+parameter.getName()+"="+parameter.getValue()+"&";
 				}
 			}
-			URL url = new URL(tempURL); 
+			url = new URL(tempURL); 
 			HttpURLConnection processorConnection = (HttpURLConnection)url.openConnection();
 			processorConnection.setDoOutput(true);
 			processorConnection.setDoInput(false);
@@ -33,8 +34,9 @@ public class CallURLBuildTask extends Task {
 			processorConnection.getOutputStream();
 			processorConnection.disconnect();
 
-		} catch (Exception e) {
-			throw new BuildException(e);
+		} catch (Exception e) 
+		{		    
+			throw new BuildException("Couldn't open URL '"+url+"'",e);
 		}
 	}
 	

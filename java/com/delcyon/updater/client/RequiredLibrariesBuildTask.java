@@ -14,14 +14,17 @@ public class RequiredLibrariesBuildTask extends Task {
 	private String propertyName = "required.libraries";
 	private boolean verbose = false;
 	
-	public void execute() throws BuildException {
+	public void execute() throws BuildException 
+	{
 		String requiredLibraryPropertyString = "";
-		for (FileSet fileSet : filesSetVector) {
+		for (FileSet fileSet : filesSetVector) 
+		{
 			DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());		
 			String[] fileNames = directoryScanner.getIncludedFiles();
 			
 			
-			for (String fileName : fileNames) {
+			for (String fileName : fileNames) 
+			{
 				requiredLibraryPropertyString += fileName+" ";
 				if (verbose == true){
 					log("Adding: "+fileName);

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CentralServices variable ="" name="bob">
+    <group name="default"  >
+        
+        <control name="default" courtIPAddress="x.x.x.x" >
+            <copy name="iptables" dest="iptables.out" onAction="restart_iptables" chmod="+x">
+                <filter type="TABLE" valueAttributeName="courtIPAddress" trigger="COURT_IP_ADDRESS" />
+                <filter type="TABLE" valueAttributeName="as400IPAddress" trigger="AS400_IPADDRESS" />
+                <filter type="TABLE" valueAttributeName="IMAGING_IPADDRESS" trigger="IMAGING_IPADDRESS" />
+                <filter type="TABLE" valueAttributeName="eth0netmask" trigger="ETH0_NETMASK" />
+            </copy>
+            
+            <shellcommand name="restart_iptables_command" exec="/sbin/service iptables restart" if="restart_iptables"/>
+            <report name="uptime" exec="/usr/bin/uptime" />
+            
+        </control>
+    </group>
+
+</CentralServices>

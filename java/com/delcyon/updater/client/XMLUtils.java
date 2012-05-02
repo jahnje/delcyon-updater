@@ -37,176 +37,154 @@ import org.w3c.dom.NodeList;
 
 /**
  * @author jeremiah
- *
  */
 public class XMLUtils
 {
 
-	
-	
+    public static Node selectSingleNode(Node node, String path) throws Exception
+    {
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
 
-	
-	
-	public static Node selectSingleNode(Node node, String path) throws Exception
-	{
-			XPathFactory xPathFactory = XPathFactory.newInstance();
-			javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
-			
-			XPathExpression xPathExpression = xPath.compile(path);
-			return (Node) xPathExpression.evaluate(node,XPathConstants.NODE);
-			
-		
-	}
+        XPathExpression xPathExpression = xPath.compile(path);
+        return (Node) xPathExpression.evaluate(node, XPathConstants.NODE);
+    }
 
-	
-	
-	
-	public static void removeNamespaceDeclarations(Node node,String... namespaces)
-	{
-		NamedNodeMap namedNodeMap = ((Element)node).getAttributes();
-		for(int nameIndex = 0; nameIndex < namedNodeMap.getLength(); nameIndex++)
-		{
-			Node namedNode = namedNodeMap.item(nameIndex);
-			String uri = namedNode.getNamespaceURI();
-			String localName = namedNode.getLocalName();
-			if (uri != null && uri.equals("http://www.w3.org/2000/xmlns/"))
-			{
-				for (String removeableNamespace : namespaces)
-				{
-					if (namedNode.getNodeValue().equals(removeableNamespace))
-					{								
-						((Element)node).removeAttributeNS("http://www.w3.org/2000/xmlns/",localName);
-						nameIndex--;								
-					}
-				}
-			}
-		}
-	}
-	
-	public static NodeList selectNodes(Node node, String path) throws Exception
-	{
-		
-			XPathFactory xPathFactory = XPathFactory.newInstance();
-			javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
-			System.out.println(xPath+":"+node);
-			XPathExpression xPathExpression = xPath.compile(path);
-			return (NodeList) xPathExpression.evaluate(node,XPathConstants.NODESET);
-			
-		
-	}
+    public static void removeNamespaceDeclarations(Node node, String... namespaces)
+    {
+        NamedNodeMap namedNodeMap = ((Element) node).getAttributes();
+        for (int nameIndex = 0; nameIndex < namedNodeMap.getLength(); nameIndex++)
+        {
+            Node namedNode = namedNodeMap.item(nameIndex);
+            String uri = namedNode.getNamespaceURI();
+            String localName = namedNode.getLocalName();
+            if (uri != null && uri.equals("http://www.w3.org/2000/xmlns/"))
+            {
+                for (String removeableNamespace : namespaces)
+                {
+                    if (namedNode.getNodeValue().equals(removeableNamespace))
+                    {
+                        ((Element) node).removeAttributeNS("http://www.w3.org/2000/xmlns/", localName);
+                        nameIndex--;
+                    }
+                }
+            }
+        }
+    }
 
-	
-	public static String selectSingleNodeValue(Element node, String path) throws Exception
-	{
-		
-			XPathFactory xPathFactory = XPathFactory.newInstance();
-			javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
-			
-			XPathExpression xPathExpression = xPath.compile(path);
-			return  xPathExpression.evaluate(node);
-			
-		
-	}
+    public static NodeList selectNodes(Node node, String path) throws Exception
+    {
 
-	public static String getXPath(Node node) throws Exception
-	{
-		//example
-		// /Capo/group[1]/choose[1]/when[1]
-		return getPathToRoot(node);		
-	}
-	
-	private static String getPathToRoot(Node node) throws Exception
-	{
-		
-		String name = node.getNodeName();
-		if (node instanceof Element)
-		{
-			String nameAttributeValue = ((Element) node).getAttribute("name");
-			if (nameAttributeValue.isEmpty() == true)
-			{
-				String position = selectSingleNodeValue((Element) node, "count(preceding-sibling::"+name+")+1");
-				name += "["+position+"]";				
-			}
-			else
-			{
-				name += "[@name = '"+nameAttributeValue+"']";
-			}
-		}
-		if (node.getParentNode() != null && node.getParentNode().getNodeName() != null && node.getParentNode() instanceof Element)
-		{
-			
-			return getPathToRoot(node.getParentNode())+"/"+name;
-		}
-		else
-		{
-			return "/"+name;
-		}
-			
-	}
-	
-	
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+        XPathExpression xPathExpression = xPath.compile(path);
+        return (NodeList) xPathExpression.evaluate(node, XPathConstants.NODESET);
+    }
 
-	public static void dumpNode(Node node, OutputStream outputStream) throws Exception
-	{
-	
-		Transformer transformer = null;
-		URL transformURL = XMLUtils.class.getClassLoader().getResource("identity_transform.xsl"); 
-		if (transformURL != null)			
-		{					
-			 transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(transformURL.openStream()));			
-			
-		}
-		else
-		{
-			transformer = TransformerFactory.newInstance().newTransformer();
-		}
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");		
-				
-		transformer.transform(new DOMSource(node), new StreamResult(outputStream));
-		
-		
-	}
+    public static String selectSingleNodeValue(Element node, String path) throws Exception
+    {
 
-	/**
-	 * 
-	 * @param node
-	 * @param xpath
-	 * @return list of nodes removed
-	 * @throws Exception
-	 */
-	public static NodeList removeNodes(Node node, String xpath) throws Exception
-	{
-		NodeList nodeList = selectNodes(node, xpath);
-		for (int nodeListIndex = 0; nodeListIndex < nodeList.getLength(); nodeListIndex++)
-		{
-			Node removeableNode = nodeList.item(nodeListIndex);
-			Node parentNode = removeableNode.getParentNode();
-			if (parentNode != null)
-			{
-				parentNode.removeChild(removeableNode);
-			}
-		}
-		return nodeList;
-	}
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
 
-	
+        XPathExpression xPathExpression = xPath.compile(path);
+        return xPathExpression.evaluate(node);
 
-	public static void removeContent(Element element)
-	{
-		NodeList nodeList = element.getChildNodes();
-		while(nodeList.getLength() > 0)
-		{
-			element.removeChild(nodeList.item(0));			
-		}
-		
-	}
+    }
 
-	public static void removeAttributes(Element element)
-	{
-		NamedNodeMap namedNodeMap = element.getAttributes();
-		while (namedNodeMap.getLength() > 0)
-		{
-			element.removeAttributeNode((Attr) namedNodeMap.item(0));
-		}
-	}
+    public static String getXPath(Node node) throws Exception
+    {
+        // example
+        // /Capo/group[1]/choose[1]/when[1]
+        return getPathToRoot(node);
+    }
+
+    private static String getPathToRoot(Node node) throws Exception
+    {
+
+        String name = node.getNodeName();
+        if (node instanceof Element)
+        {
+            String nameAttributeValue = ((Element) node).getAttribute("name");
+            if (nameAttributeValue.isEmpty() == true)
+            {
+                String position = selectSingleNodeValue((Element) node, "count(preceding-sibling::" + name + ")+1");
+                name += "[" + position + "]";
+            }
+            else
+            {
+                name += "[@name = '" + nameAttributeValue + "']";
+            }
+        }
+        if (node.getParentNode() != null && node.getParentNode().getNodeName() != null && node.getParentNode() instanceof Element)
+        {
+
+            return getPathToRoot(node.getParentNode()) + "/" + name;
+        }
+        else
+        {
+            return "/" + name;
+        }
+
+    }
+
+    public static void dumpNode(Node node, OutputStream outputStream) throws Exception
+    {
+
+        Transformer transformer = null;
+        URL transformURL = XMLUtils.class.getClassLoader().getResource("identity_transform.xsl");
+        if (transformURL != null)
+        {
+            transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(transformURL.openStream()));
+
+        }
+        else
+        {
+            transformer = TransformerFactory.newInstance().newTransformer();
+        }
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        transformer.transform(new DOMSource(node), new StreamResult(outputStream));
+
+    }
+
+    /**
+     * @param node
+     * @param xpath
+     * @return list of nodes removed
+     * @throws Exception
+     */
+    public static NodeList removeNodes(Node node, String xpath) throws Exception
+    {
+        NodeList nodeList = selectNodes(node, xpath);
+        for (int nodeListIndex = 0; nodeListIndex < nodeList.getLength(); nodeListIndex++)
+        {
+            Node removeableNode = nodeList.item(nodeListIndex);
+            Node parentNode = removeableNode.getParentNode();
+            if (parentNode != null)
+            {
+                parentNode.removeChild(removeableNode);
+            }
+        }
+        return nodeList;
+    }
+
+    public static void removeContent(Element element)
+    {
+        NodeList nodeList = element.getChildNodes();
+        while (nodeList.getLength() > 0)
+        {
+            element.removeChild(nodeList.item(0));
+        }
+
+    }
+
+    public static void removeAttributes(Element element)
+    {
+        NamedNodeMap namedNodeMap = element.getAttributes();
+        while (namedNodeMap.getLength() > 0)
+        {
+            element.removeAttributeNode((Attr) namedNodeMap.item(0));
+        }
+    }
 }
