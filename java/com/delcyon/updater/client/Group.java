@@ -107,9 +107,9 @@ public class Group extends CSNode
         {
             requiredMembershipsHashtable.put(requiredMembership, requiredMembership);
         }
-        if (getVar(centralServicesRequest,"memberships").length() > 0)
+        if (getVar(centralServicesRequest,"memberships",false).length() > 0)
         {
-            String[] memberships = getVar(centralServicesRequest,"memberships").split(",");
+            String[] memberships = getVar(centralServicesRequest,"memberships",false).split(",");
             for (String membership : memberships)
             {
                 requiredMembershipsHashtable.remove(membership);

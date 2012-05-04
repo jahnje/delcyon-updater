@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Vector;
+import java.util.logging.Level;
 
 /**
  * @author jeremiah
@@ -21,17 +22,7 @@ import java.util.Vector;
 public class VersionControl
 {
 
-    private static final String PROCESSING_VERSION_ATTRIBUTE_NAME = "processingVersion";
-    private static final String CLIENT_VERSION_ID_ATTRIBUTE_NAME = "clientID";
-    private static final String VERSIONS_DOCUMENT_ROOTELEMENT_NAME = "Versions";
-    private static final String VERSIONS_XML_FILENAME = "versions.xml";
-    private static final String VERSION_ELEMENT_NAME = "version";
-    private static final String PATH_ATTRIBUTE_NAME = "path";
-    private static final String MD5_ATTRIBUTE_NAME = "md5";
-    private static final String LAST_MODIFIED_ATTRIBUTE_NAME = "lastModified";
-    private static final String TABLENAME_ATTRIBUTE_NAME = "tableName";
-    private static final String TABLE_ENTRYKEY_ATTRIBUTE_NAME = "tableEntryKeyName";
-    private static final String TABLE_ENTRYMD5_ATTRIBUTE_NAME = "tableEntryMD5";
+   
     private static VersionControl versionControl;
 
     public static VersionControl getVersionControl() throws Exception
@@ -173,7 +164,7 @@ public class VersionControl
             }
         }
 
-        //Application.logger.log(Level.FINE, "Copying " + masterFileName + " to client " + client.getClientID());
+        CentralServicesClient.logger.log(Level.FINE, "Copying " + masterFileName + " to client " + client.getClientID());
         readStreamIntoOutputStream(fileInputStream, rootOutputStream);
         return md5rootOutputStream.getMD5();
     }
@@ -193,24 +184,5 @@ public class VersionControl
         outputStream.flush();
     }
 
-
-
-
-
-    /**
-     * @param attributeValue
-     * @param clientID
-     * @return
-     */
-    public String getClientVersion(String attributeValue, String clientID)
-    {
-        return null;
-    }
-
-    
-
-    
-
-    
 
 }

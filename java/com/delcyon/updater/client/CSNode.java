@@ -4,14 +4,13 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.logging.Level;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import com.sun.tools.javac.util.Name.Table;
 
 
 
@@ -25,7 +24,7 @@ public abstract class CSNode {
 	
 	private String name = null;
 	private String version;
-	private Table table;
+	
 	
 	public CSNode(CSNode parent, Element nodeElement) throws Exception {
 		this.parent  = parent;
@@ -41,7 +40,7 @@ public abstract class CSNode {
 	    }
 		this.nodeElement  = loadElement(nodeElement);
 		init(this.nodeElement);
-		//Application.logger.log(Level.INFO, "reloaded: "+getName()+" from "+getImportValue());
+		CentralServicesClient.logger.log(Level.INFO, "reloaded: "+getName()+" from "+getImportValue());
 		
 	}
 	
@@ -146,8 +145,8 @@ public abstract class CSNode {
     }
  
     public void setVar(String key, String value)
-    {
-    	//Application.logger.log(Level.FINER, "Storing "+key+" => '"+value+"'");
+    {        
+    	CentralServicesClient.logger.log(Level.FINER, "Storing '"+key+"' => '"+value+"'");
     	localVariables.put(key, value);
     }
 
@@ -157,11 +156,11 @@ public abstract class CSNode {
      */
     public String getVar(String varName)
     {
-        return getVar(null, varName);
+        return getVar(null, varName,false);
     }
     
     
-    public String getVar(CentralServicesRequest centralServicesRequest, String varName)
+    public String getVar(CentralServicesRequest centralServicesRequest, String varName,boolean emptyOK)
     {
         //Thread.dumpStack();
         String value = "";
@@ -174,7 +173,7 @@ public abstract class CSNode {
             //check for var name replacement
             if (varName.matches(".*\\$\\{.*\\}.*"))
             {
-                varName = processVariablesInString(centralServicesRequest,varName);
+                varName = processVariablesInString(centralServicesRequest,varName,emptyOK);
             }
 
 
@@ -193,7 +192,7 @@ public abstract class CSNode {
                 {
                     if (node.hasVar(varName))
                     {
-                        value = node.getVar(centralServicesRequest,varName);
+                        value = node.getVar(centralServicesRequest,varName,emptyOK);
                         break;
                     }
                     
@@ -203,7 +202,7 @@ public abstract class CSNode {
         }
         if (value.matches(".*\\$\\{.*\\}.*"))
         {
-            value = processVariablesInString(centralServicesRequest,value);
+            value = processVariablesInString(centralServicesRequest,value,emptyOK);
         }
         
         return value;
@@ -212,14 +211,14 @@ public abstract class CSNode {
 	
     
     
-    public String processVariablesInString(CentralServicesRequest centralServicesRequest,String name)
+    public String processVariablesInString(CentralServicesRequest centralServicesRequest,String name,boolean emptyOK)
     {
         
         String[] variables = getVariableNames(name);
         for (String variableName : variables)
         {
-            String replacement = getVar(centralServicesRequest,variableName);
-            if (replacement.length() != 0)
+            String replacement = getVar(centralServicesRequest,variableName,emptyOK);
+            if (replacement.length() != 0 || emptyOK)
             {
                 name = name.replaceAll("\\$\\{"+variableName+"\\}", replacement);
             }            
@@ -267,7 +266,7 @@ public abstract class CSNode {
 	  if (hasImportChanged() == true)
 	  {
 	      clientVersionChanged();
-	      //Application.logger.log(Level.INFO, getName()+" has changed, and need to be reloaded");
+	      CentralServicesClient.logger.log(Level.INFO, getName()+" has changed, and need to be reloaded");
 	      return true;
 	      //reloadNode(VersionControl.getVersionControl().loadDocument(getImportValue()).getRootElement());
 	      //

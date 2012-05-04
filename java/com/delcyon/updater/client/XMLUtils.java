@@ -50,6 +50,16 @@ public class XMLUtils
         return (Node) xPathExpression.evaluate(node, XPathConstants.NODE);
     }
 
+    public static boolean evaluateXPath(Node node, String path) throws Exception
+    {
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+
+        XPathExpression xPathExpression = xPath.compile(path);
+        Boolean result = (Boolean) xPathExpression.evaluate(node, XPathConstants.BOOLEAN);
+        return result; 
+    }
+    
     public static void removeNamespaceDeclarations(Node node, String... namespaces)
     {
         NamedNodeMap namedNodeMap = ((Element) node).getAttributes();

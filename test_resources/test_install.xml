@@ -2,11 +2,15 @@
 <CentralServices variable ="" name="bob">
     <group name="default"  >
         
-        <control name="default" java_command="/usr/bin/java" >
-            <ask test="${java_command} == null" name="java_command"  message="Please enter the path to the java command:" />
+        <control name="default">
+            <pref path="/com/delcyon/capo" get="CAPO_DIR" var="capo.dir"/>
+            <ask if="'${capo.dir}' = '' or '${capo.dir}' = '.'" message="please enter the path to install capo in" default="." var="capo.dir"/>
+            <pref path="/com/delcyon/capo" set="CAPO_DIR" var="capo.dir"/>
+            <ask if="'${java_command}' = ''" name="java_command"  message="Please enter the path to the java command:" default="${java.home}/java"/>
             <copy name="test_resources/wrapper.conf" dest="wrapper.conf" onAction="restart_iptables" chmod="+x">
                 <filter valueAttributeName="java_command" trigger="java_cmd" />                
             </copy>
+            
             <shellcommand name="restart_iptables_command" exec="/sbin/service iptables restart" if="restart_iptables"/>
         </control>
     </group>

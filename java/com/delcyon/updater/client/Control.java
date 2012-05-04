@@ -6,6 +6,8 @@ package com.delcyon.updater.client;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.prefs.Preferences;
 
 import org.w3c.dom.Element;
 
@@ -34,12 +36,66 @@ public class Control extends CSNode
     	{
     		return new Copy(this,childElement);
     	}
+    	else if (childElement.getNodeName().equals("pref"))
+    	{
+    	    
+    	    String path = processVariablesInString(null,childElement.getAttribute("path"),true);
+    	    Preferences preferences =  Preferences.systemRoot().node(path);
+    	    
+    	    if (childElement.hasAttribute("set"))
+    	    {
+    	        String preferenceName =  processVariablesInString(null,childElement.getAttribute("set"),true);
+    	        String varName = processVariablesInString(null,childElement.getAttribute("var"),true);
+    	        if (childElement.hasAttribute("var") == false)
+                {
+                    varName = preferenceName;
+                }
+    	        preferences.put(preferenceName, getVar(varName));
+    	        preferences.sync();
+    	    }
+    	   
+    	    if (childElement.hasAttribute("get"))
+            {
+                String preferenceName =  processVariablesInString(null,childElement.getAttribute("get"),true);
+                String property = processVariablesInString(null,childElement.getAttribute("var"),true);
+                if (childElement.hasAttribute("var") == false)
+                {
+                    property = preferenceName;
+                }
+                setVar(property, preferences.get(preferenceName, ""));
+            }
+    	    
+    	    return null;
+    	}
     	else if (childElement.getNodeName().equals("ask"))
     	{
+    	    if (childElement.hasAttribute("if"))
+    	    {
+    	        String xpath = processVariablesInString(null, childElement.getAttribute("if"),true);
+    	        CentralServicesClient.logger.log(Level.FINE, "evaluating "+xpath);
+    	        boolean result = XMLUtils.evaluateXPath(childElement, xpath);
+    	        if (result == false)
+    	        {
+    	            return null;    	            
+    	        }
+    	    }
     		System.out.println(childElement.getAttribute("message"));
+    		if(childElement.hasAttribute("default"))
+    		{
+    		    String defaultValue = processVariablesInString(null,childElement.getAttribute("default"),false);
+    		    if (defaultValue.isEmpty() == false)
+    		    {
+    		        setVar(childElement.getAttribute("var"), defaultValue);
+    		        System.out.println("Default ["+defaultValue+"]");
+    		    }
+    		    
+    		}
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String value = br.readLine();
-            setVar(childElement.getAttribute("name"), value);
+            if (value.isEmpty() == false)
+            {
+                setVar(childElement.getAttribute("var"), value);
+            }
             
     		return null;
     	}

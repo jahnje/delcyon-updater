@@ -7,12 +7,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,6 +26,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.delcyon.updater.client.LeveledConsoleHandler.Output;
 
 
 
@@ -35,6 +41,12 @@ import org.w3c.dom.NodeList;
 public class CentralServicesClient
 {
 
+    public static Level LOGGING_LEVEL = Level.ALL;
+    public static Logger logger = null;
+    private static LeveledConsoleHandler leveledConsoleHandler;
+    private static FileHandler fileHandler;
+    private static String logFileName = null;   
+    
     Hashtable<String, String> processingPropertiesHashtable = new Hashtable<String, String>(){
         /* (non-Javadoc)
          * @see java.util.Hashtable#put(java.lang.Object, java.lang.Object)
@@ -47,6 +59,35 @@ public class CentralServicesClient
         }
     };
     private CentralServices centralServices;
+    
+    /**
+     * @throws Exception 
+     * 
+     */
+    public CentralServicesClient() throws Exception
+    {
+        logger = Logger.getLogger(this.getClass().getName());
+        logger.setLevel(LOGGING_LEVEL);
+        if (leveledConsoleHandler == null)
+        {
+            leveledConsoleHandler = new LeveledConsoleHandler();
+            leveledConsoleHandler.setLevel(LOGGING_LEVEL);
+            leveledConsoleHandler.setOutputForLevel(Output.STDERR, Level.FINER);
+            logger.setUseParentHandlers(false);
+            logger.addHandler(leveledConsoleHandler);           
+        }
+        logger.log(Level.INFO, "Starting Installer ");
+
+        if (fileHandler == null)
+        {
+            logFileName = "install.log";
+            logger.log(Level.FINE, "Opening LogElement File:" + logFileName);
+            fileHandler = new FileHandler(logFileName);
+            fileHandler.setLevel(LOGGING_LEVEL);
+            logger.addHandler(fileHandler);
+        }
+    }
+    
     /* (non-Javadoc)
      * @see com.delcyon.cs.application.Application#getApplicationName()
      */
@@ -62,9 +103,9 @@ public class CentralServicesClient
     @Test
     public void testProcessStatusDocument() throws Exception
     {
-        centralServices = CentralServices.loadCentralServices(new File("test_resources/test_install.xml").toURL());
-        CentralServicesClient centralServicesClient = new CentralServicesClient();
-        Document requestDocument = centralServicesClient.initDocument();
+        
+        centralServices = CentralServices.loadCentralServices(new File("test_resources/test_install.xml").toURL());        
+        Document requestDocument = initDocument();
         requestDocument.getDocumentElement().setAttribute("RequestType", "STATUS_CHECK");
         CentralServicesRequest centralServicesRequest = new CentralServicesRequest(requestDocument.getDocumentElement(),centralServices);
         
@@ -83,7 +124,7 @@ public class CentralServicesClient
         
         
         processStatusDocument(statusDocument);
-        //Application.logger.log(Level.INFO, "Finished Run. Exiting...");
+        CentralServicesClient.logger.log(Level.INFO, "Finished Run. Exiting...");
     }
 
     /**
@@ -110,7 +151,8 @@ public class CentralServicesClient
         copy,
         file,
         shellcommand,
-        ask;
+        ask,
+        pref;
     }
 
     /**
@@ -120,7 +162,7 @@ public class CentralServicesClient
     @SuppressWarnings("unchecked")
     private void processControlElement(Element controlElement) throws Exception
     {
-        //Application.logger.log(Level.FINE, "Processing Control Element "+controlElement.getAttribute"name"));
+        CentralServicesClient.logger.log(Level.FINE, "Processing Control Element "+controlElement.getAttribute("name"));
         NodeList childList = controlElement.getChildNodes();
         for (int index = 0; index < childList.getLength(); index++)
         {
@@ -158,13 +200,13 @@ public class CentralServicesClient
                     {
                         processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
                     }
-                    //Application.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
+                    CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
                     return ;
                 }
             }
             else
             {
-                //Application.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
+                CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
                 if (childElement.getAttribute("onSkip") != null)
                 {
                     processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
@@ -193,7 +235,7 @@ public class CentralServicesClient
     private String runCommand(String command, File workingDir)throws Exception
     {
         String output = null;
-        //Application.logger.log(Level.INFO, "Running "+command);
+        CentralServicesClient.logger.log(Level.INFO, "Running "+command);
         String[] commandArray = {"/bin/sh","-c",command};
         Process process = Runtime.getRuntime().exec(commandArray,null,workingDir);
         
@@ -230,12 +272,12 @@ public class CentralServicesClient
         String warningMessage = new String(errorByteArrayOutputStream.toByteArray());
         if (warningMessage != null && warningMessage.trim().length() != 0)
         {
-            //Application.logger.log(Level.WARNING, command+":\n"+warningMessage.trim());
+            CentralServicesClient.logger.log(Level.WARNING, command+":\n"+warningMessage.trim());
         }
         String infoMessage = new String(outputByteArrayOutputStream.toByteArray());
         if (infoMessage != null && infoMessage.trim().length() != 0)
         {
-            //Application.logger.log(Level.INFO, infoMessage.trim());
+            CentralServicesClient.logger.log(Level.INFO, infoMessage.trim());
             output = infoMessage.trim();
         }
         
@@ -262,13 +304,13 @@ public class CentralServicesClient
                         {
                             processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
                         }
-                        //Application.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
+                        CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
                         return false;
                     }
                 }
                 else
                 {
-                    //Application.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
+                    CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
                     if (childElement.hasAttribute("onSkip"))
                     {
                         processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
@@ -276,7 +318,7 @@ public class CentralServicesClient
                     return false;    
                 }
             }
-            //Application.logger.log(Level.FINE, "Processing Copy Element "+masterFileName+" ==> "+destinationFileName);
+            CentralServicesClient.logger.log(Level.FINE, "Processing Copy Element "+masterFileName+" ==> "+destinationFileName);
             File file = new File(destinationFileName);
             if (file.exists() == false)
             {
@@ -285,7 +327,7 @@ public class CentralServicesClient
                 File dirs = new File(path);
                 if (dirs.exists() == false)
                 {
-                    //Application.logger.log(Level.INFO, "Creating Directory: "+dirs.getCanonicalPath());
+                    CentralServicesClient.logger.log(Level.INFO, "Creating Directory: "+dirs.getCanonicalPath());
                     dirs.mkdirs();
                 }
                 file.createNewFile();
@@ -305,7 +347,7 @@ public class CentralServicesClient
                 {
                     client.processRequest(byteArrayOutputStream);
                 }
-                System.out.println(new String(byteArrayOutputStream.toByteArray()));
+                //System.out.println(new String(byteArrayOutputStream.toByteArray()));
                 
                 processCopyOutput(destinationFileName, new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
                 
@@ -325,7 +367,7 @@ public class CentralServicesClient
             }
             else
             {
-                //Application.logger.log(Level.FINE, "File already up to date, skipping.");
+                CentralServicesClient.logger.log(Level.FINE, "File already up to date, skipping.");
                 if (childElement.getAttribute("onSkip") != null)
                 {
                     processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
@@ -344,20 +386,10 @@ public class CentralServicesClient
         }
         return false;
     }
-
-    private void sendRequest(Document requestDocument, HttpURLConnection processorConnection) throws Exception
-    {
-        //Application.logger.log(Level.INFO, "Sending Request");
-        OutputStream outputStream = processorConnection.getOutputStream();
-       
-        XMLUtils.dumpNode(requestDocument, outputStream);
-        outputStream.flush();
-        outputStream.close();
-    }
-
+   
     private void processCopyOutput(String fileName, InputStream inputStream) throws Exception
     {
-        //Application.logger.log(Level.INFO, "Copying "+fileName);
+        CentralServicesClient.logger.log(Level.INFO, "Copying "+fileName);
         FileOutputStream fileOutputStream = new FileOutputStream(fileName, false);
         readStreamIntoOutputStream(inputStream, fileOutputStream);
         inputStream.close();
@@ -395,7 +427,7 @@ public class CentralServicesClient
             variableElement.setAttribute("name", entry.getKey());
             variableElement.setAttribute("value", entry.getValue());
             rootElement.appendChild(variableElement);
-            //Application.logger.log(Level.FINE, "Storing "+variableElement.getAttribute"name")+" ==> "+variableElement.getAttribute"value"));
+            CentralServicesClient.logger.log(Level.FINE, "Storing "+variableElement.getAttribute("name")+" ==> "+variableElement.getAttribute("value"));
         }
 
         // load system properties
@@ -406,7 +438,7 @@ public class CentralServicesClient
             variableElement.setAttribute("name", entry.getKey().toString());
             variableElement.setAttribute("value", entry.getValue().toString());
             rootElement.appendChild(variableElement);
-            //Application.logger.log(Level.FINE, "Storing "+variableElement.getAttribute"name")+" ==> "+variableElement.getAttribute"value"));
+            CentralServicesClient.logger.log(Level.FINE, "Storing "+variableElement.getAttribute("name")+" ==> "+variableElement.getAttribute("value"));
         }
         
         

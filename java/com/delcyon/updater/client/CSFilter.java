@@ -57,7 +57,7 @@ public class CSFilter extends CSNode
      */
     public byte[] getReplacement(CentralServicesRequest centralServicesRequest)
     {
-        return getVar(centralServicesRequest, getVar(centralServicesRequest, "valueAttributeName")).getBytes();
+        return getVar(centralServicesRequest, getVar(centralServicesRequest, "valueAttributeName",false),false).getBytes();
          
     }
 
@@ -70,7 +70,7 @@ public class CSFilter extends CSNode
     private byte[] getGetScopedVariable(CentralServicesRequest centralServicesRequest)
     {
         
-        String value = getVar(centralServicesRequest, getVar(centralServicesRequest,"varName"));
+        String value = getVar(centralServicesRequest, getVar(centralServicesRequest,"varName",false),false);
         
         return value.getBytes();
     }

@@ -4,17 +4,14 @@
 package com.delcyon.updater.client;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -116,12 +113,12 @@ public class CentralServicesRequest
         switch (requestType)
         {
             case COPY:
-            	//Application.logger.log(Level.INFO, "Processing Copy request for "+copyName+" from "+getClientID());
+            	CentralServicesClient.logger.log(Level.INFO, "Processing Copy request for "+copyName+" from "+getClientID());
                 processObjectRequest(controlName, copyName, outputStream);    
                 return null;
 
             case STATUS_CHECK:
-            	//Application.logger.log(Level.INFO, "Processing Status Check request for "+getClientID());
+            	CentralServicesClient.logger.log(Level.INFO, "Processing Status Check request for "+getClientID());
                 return processStatusCheck();                
            
         }
@@ -180,31 +177,22 @@ public class CentralServicesRequest
                     String attributeValue = attribute.getValue();
                     if (attributeValue.matches(".*\\$\\{.*\\}.*"))
                     {
-                        attributeValue = control.processVariablesInString(this,attributeValue);
+                        attributeValue = control.processVariablesInString(this,attributeValue,false);
                     }
                     newChildElement.setAttribute(attribute.getName(),attribute.getValue());
                     if (attribute.getName().equals("name"))
                     {
                     	String md5 = null;
-                    	if (XMLUtils.selectNodes(child, "filter").getLength() == 0)
-                    	{
-                    		md5 = VersionControl.getVersionControl().getClientVersion(attributeValue, null);
+
+                    	//need to get to the copy from here
+                    	Copy copy = control.getCopyForMasterFile(attribute.getValue());
+                    	if (copy != null)
+                    	{                                
+                    	    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    	    md5 = copy.processRequest(this, byteArrayOutputStream);                                                                                                
                     	}
-                    	else
-                    	{
-                    		md5 = VersionControl.getVersionControl().getClientVersion(attributeValue, getClientID());
-                    	}
-                        if (md5 == null)
-                        {
-                            //need to get to the copy from here
-                            Copy copy = control.getCopyForMasterFile(attribute.getValue());
-                            if (copy != null)
-                            {                                
-                                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                                md5 = copy.processRequest(this, byteArrayOutputStream);                                                                                                
-                            }
-                        }
-                        if (md5 != null)
+
+                    	if (md5 != null)
                         {
                             newChildElement.setAttribute("md5",md5);
                         }
@@ -222,7 +210,7 @@ public class CentralServicesRequest
                         Copy copy = control.getCopyForMasterFile(child.getAttribute("name"));
                         if (copy != null)
                         {
-                            newChildElement.setAttribute(attribute.getName(),control.processVariablesInString(this,copy.getDestinationName(this)));    
+                            newChildElement.setAttribute(attribute.getName(),control.processVariablesInString(this,copy.getDestinationName(this),false));    
                         }
 //                        else
 //                        {

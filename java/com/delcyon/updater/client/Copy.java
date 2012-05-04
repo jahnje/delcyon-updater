@@ -47,7 +47,7 @@ public class Copy extends CSNode
      */
     public String processRequest(CentralServicesRequest centralServicesRequest, OutputStream outputStream) throws Exception
     {       
-        return VersionControl.getVersionControl().readClientVersionStreamIntoOutputStream(getVar(centralServicesRequest, "name"), outputStream, centralServicesRequest, getChildVector());    
+        return VersionControl.getVersionControl().readClientVersionStreamIntoOutputStream(getVar(centralServicesRequest, "name",false), outputStream, centralServicesRequest, getChildVector());    
     }
 
     public String getVersion(CentralServicesRequest centralServicesRequest) throws Exception
@@ -63,12 +63,12 @@ public class Copy extends CSNode
      */
     public String getSourceName(CentralServicesRequest centralServicesRequest)
     {
-        return getVar(centralServicesRequest, "name");
+        return getVar(centralServicesRequest, "name",false);
     }
     
     public String getDestinationName(CentralServicesRequest centralServicesRequest)
     {
-        return getVar(centralServicesRequest, "dest");
+        return getVar(centralServicesRequest, "dest",false);
     }
     
    

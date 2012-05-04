@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.logging.Level;
 
 /**
  * @author jeremiah
@@ -62,7 +63,7 @@ public class CSFilterOutputStream extends FilterOutputStream
                 if (filter.getTrigger().equals(buffer.toString()))
                 {
                     byte[] replacement =  filter.getReplacement(centralServicesRequest);
-                    //Application.logger.log(Level.FINER, "Replacing '"+(char)SYMBOL+(char)SYMBOL+filter.getTrigger()+(char)SYMBOL+(char)SYMBOL+"' with '"+new String(replacement)+"'");
+                    CentralServicesClient.logger.log(Level.FINER, "Replacing '"+(char)SYMBOL+(char)SYMBOL+filter.getTrigger()+(char)SYMBOL+(char)SYMBOL+"' with '"+new String(replacement)+"'");
                     out.write(replacement);                   
                     symbolCount = 0;
                 }
@@ -92,7 +93,7 @@ public class CSFilterOutputStream extends FilterOutputStream
                 out.write(SYMBOL);
                 out.write(buffer.toByteArray());
                 symbolCount = 0;
-                //Application.logger.log(Level.FINER, "Reached newline flushing buffer");
+                CentralServicesClient.logger.log(Level.FINER, "Reached newline flushing buffer");
             }
             else if (buffer.size() >= MAX_BUFFER_SIZE)
             {
@@ -100,7 +101,7 @@ public class CSFilterOutputStream extends FilterOutputStream
                 out.write(SYMBOL);
                 out.write(buffer.toByteArray());
                 symbolCount = 0;
-                //Application.logger.log(Level.FINER, "Reached max buffer size :"+MAX_BUFFER_SIZE+" flushing buffer");
+                CentralServicesClient.logger.log(Level.FINER, "Reached max buffer size :"+MAX_BUFFER_SIZE+" flushing buffer");
             }
         }
         else if (symbolCount == 3) //should have gotten another @ symbol, so reset
