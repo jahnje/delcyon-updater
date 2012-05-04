@@ -66,17 +66,9 @@ public class CentralServicesClient
         CentralServicesClient centralServicesClient = new CentralServicesClient();
         Document requestDocument = centralServicesClient.initDocument();
         requestDocument.getDocumentElement().setAttribute("RequestType", "STATUS_CHECK");
-        CentralServicesRequest client = CentralServicesRequest.loadClient(requestDocument.getDocumentElement(),centralServices);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        if (client != null)
-        {
-            client.processRequest(byteArrayOutputStream);
-        }
-        System.out.println(new String(byteArrayOutputStream.toByteArray()));
+        CentralServicesRequest centralServicesRequest = new CentralServicesRequest(requestDocument.getDocumentElement(),centralServices);
         
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document statusDocument = documentBuilder.parse(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+        Document statusDocument = centralServicesRequest.processStatusCheck();
         processStatusDocument(statusDocument);
     }
    
@@ -118,7 +110,7 @@ public class CentralServicesClient
         copy,
         file,
         shellcommand,
-        report;
+        ask;
     }
 
     /**

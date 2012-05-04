@@ -148,7 +148,7 @@ public abstract class CSNode {
     public void setVar(String key, String value)
     {
     	//Application.logger.log(Level.FINER, "Storing "+key+" => '"+value+"'");
-    	localVariables.put(key, key);
+    	localVariables.put(key, value);
     }
 
     /**

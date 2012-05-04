@@ -3,6 +3,8 @@
  */
 package com.delcyon.updater.client;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import org.w3c.dom.Element;
@@ -31,6 +33,15 @@ public class Control extends CSNode
     	if (childElement.getNodeName().equals("copy"))
     	{
     		return new Copy(this,childElement);
+    	}
+    	else if (childElement.getNodeName().equals("ask"))
+    	{
+    		System.out.println(childElement.getAttribute("message"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            String value = br.readLine();
+            setVar(childElement.getAttribute("name"), value);
+            
+    		return null;
     	}
     	else
     	{

@@ -111,22 +111,21 @@ public class CentralServicesRequest
      * @param outputStream
      * @throws Exception 
      */
-    public void processRequest(OutputStream outputStream) throws Exception
+    public Document processRequest(OutputStream outputStream) throws Exception
     {
         switch (requestType)
         {
             case COPY:
             	//Application.logger.log(Level.INFO, "Processing Copy request for "+copyName+" from "+getClientID());
                 processObjectRequest(controlName, copyName, outputStream);    
-                break;
+                return null;
 
             case STATUS_CHECK:
             	//Application.logger.log(Level.INFO, "Processing Status Check request for "+getClientID());
-                processStatusCheck(outputStream);
-                break;
+                return processStatusCheck();                
            
         }
-        
+        return null;
         
     }
     
@@ -139,20 +138,10 @@ public class CentralServicesRequest
      * @param outputStream
      * @throws Exception 
      */
-    private void processStatusCheck(OutputStream outputStream) throws Exception
+    public Document processStatusCheck() throws Exception
     {
         
-        try {
-            String statsDir = "";//Application.getConfiguration().getValue("CENTRAL_SERVICES_STATUS_DIR");
-            File file = new File(statsDir+File.separator+localVariables.get("CLIENT_NAME")+"-"+getClientID());
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-           
-            XMLUtils.dumpNode(clientElement, fileOutputStream);
-            fileOutputStream.close();
-        } catch(Exception exception)
-        {
-            //Application.logger.log(Level.SEVERE, "Error saving client id file: "+getClientID(),exception);
-        }
+        
         Document statusDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         
         Element statusElement = statusDocument.createElement("status");
@@ -246,8 +235,9 @@ public class CentralServicesRequest
             }
             statusElement.appendChild(newControlElement);
         }
-        XMLUtils.dumpNode(statusDocument, outputStream);
+        
         XMLUtils.dumpNode(statusDocument, System.out);
+        return statusDocument;
         //outputter.output(statusDocument,System.out);
     }
 
