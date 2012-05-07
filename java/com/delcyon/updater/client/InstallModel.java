@@ -23,7 +23,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-public class InstallModel extends Thread 
+public class InstallModel
 {
 
 	public static final String DESCRIPTOR_DOCUMENT_NAME = "descriptor.xml";
@@ -47,6 +47,10 @@ public class InstallModel extends Thread
 	
 	private Exception exeception;
 	private DocumentBuilder documentBuilder;
+	private Document installDocument;
+	private CentralServices centralServices;
+	private Document statusDocument;
+	private CentralServicesClient centralServicesClient;
 
 	/**
 	 * @param updatePath
@@ -92,6 +96,10 @@ public class InstallModel extends Thread
 				URL descriptorURL = new URL(url.toExternalForm());
 				descriptorDocument = documentBuilder.parse(descriptorURL.openStream());
 				setApplicationDirectory(descriptorDocument.getDocumentElement().getAttribute("installDirectory"));
+				if (descriptorDocument.getDocumentElement().hasAttribute("installDocumentPath"))
+				{
+					loadInstallDocument(descriptorDocument.getDocumentElement().getAttribute("installDocumentPath"));
+				}
 			}
 		} catch (IOException e)
 		{
@@ -103,21 +111,81 @@ public class InstallModel extends Thread
 
 	public boolean hasUpdates()
 	{
-		return (installActionVector.size() > 0);
+		return (installActionVector.size() > 0 || statusDocument != null);
 	}
 
 	
 	public void checkForUpdates() throws Exception
 	{
 		
-		getDescriptorDocument();
+		getDescriptorDocument();		
 		String ignoredDirectoryString = descriptorDocument.getDocumentElement().getAttribute("ignoredDirectories");
-		String[] ignoredDirectoryStrings = ignoredDirectoryString.split(",");		
-		determineActions(applicationDirectory, XMLUtils.selectNodes(descriptorDocument, filesPath), Arrays.asList(ignoredDirectoryStrings));
+		String[] ignoredDirectoryStrings = ignoredDirectoryString.split(",");
+		boolean foundOtherFiles = false;
+		if (installDocument != null)
+		{
+			Element copyOtherFilesElement = (Element) XMLUtils.selectSingleNode(installDocument, "//CopyOtherFiles");
+			if (copyOtherFilesElement != null)
+			{
+				foundOtherFiles = true;
+				NodeList fileDecriptorNodes = XMLUtils.selectNodes(descriptorDocument, filesPath);
+				for(int index = 0; index < fileDecriptorNodes.getLength(); index++)
+				{
+					
+					Element fileDescriptorElement = (Element) fileDecriptorNodes.item(index);
+					Element copyElement = copyOtherFilesElement.getOwnerDocument().createElement("copy");
+					copyElement.setAttribute("dest", XMLUtils.evaluateXPathString(fileDescriptorElement, copyOtherFilesElement.getAttribute("dest")));
+					copyElement.setAttribute("name", fileDescriptorElement.getAttribute("jarFileName"));			
+					if (XMLUtils.selectSingleNode(installDocument, "//copy[@name = '"+fileDescriptorElement.getAttribute("jarFileName")+"']") != null)
+					{						
+						continue;
+					}
+					copyOtherFilesElement.getParentNode().insertBefore(copyElement, copyOtherFilesElement);
+				}
+				copyOtherFilesElement.getParentNode().removeChild(copyOtherFilesElement);
+			}
+			centralServicesClient = new CentralServicesClient();
+			this.centralServices = new CentralServices(installDocument.getDocumentElement());
+			centralServicesClient.setCentralServices(this.centralServices);
+			Document requestDocument = CentralServicesClient.initDocument();
+			requestDocument.getDocumentElement().setAttribute("RequestType", "STATUS_CHECK");
+			CentralServicesRequest centralServicesRequest = new CentralServicesRequest(requestDocument.getDocumentElement(),centralServices);
+			this.statusDocument = centralServicesRequest.processStatusCheck();
+			
+			
+
+		}
+		
+		XMLUtils.dumpNode(installDocument, System.out);
+		if (foundOtherFiles == false)
+		{
+			determineActions(applicationDirectory, XMLUtils.selectNodes(descriptorDocument, filesPath), Arrays.asList(ignoredDirectoryStrings));
+		}
 		
 	}
 
-	private Vector<InstallAction> determineActions(String applicationDirectory, NodeList nodeList,List<String> ignoredDirectoryList) throws NoSuchAlgorithmException, FileNotFoundException, IOException
+	private void loadInstallDocument(String documentPath) throws Exception
+	{
+		try
+		{
+			if (installDocument == null)
+			{
+				DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+				documentBuilderFactory.setNamespaceAware(false);
+				documentBuilder = documentBuilderFactory.newDocumentBuilder();
+				URL descriptorURL = UpdaterClient.classLoader.getResource(documentPath);
+				installDocument = documentBuilder.parse(descriptorURL.openStream());
+				
+			}
+		} catch (IOException e)
+		{
+			System.out.println(url);
+			throw e;
+		}
+		
+	}
+
+	private Vector<InstallAction> determineActions(String applicationDirectory, NodeList nodeList,List<String> ignoredDirectoryList) throws Exception
 	{
 		setNumberOfActionsToPerform(nodeList.getLength());
 		// find all files on file system and create hastable of files keyed by
@@ -131,6 +199,8 @@ public class InstallModel extends Thread
 			installActionVector.add(new InstallAction(InstallAction.CREATE_APPDIR, null, applicationDirectory, 1, "Application Directory", null));
 		}
 
+		
+		
 		// process all entries in document removing found files from hashtable
 		// that require no change
 		int currentFile = 0;
@@ -138,21 +208,35 @@ public class InstallModel extends Thread
 		{
 
 			Element fileElement = (Element) nodeList.item(index);
-			
 			String md5 = fileElement.getAttribute("md5");
+			String key = (applicationDirectory + File.separator + fileElement.getAttribute("systemFileName"));
+			String name = (fileElement.getAttribute("name"));
+			String jarFileName = fileElement.getAttribute("jarFileName");
+			Element copyElement = null;
+			//skip any files that match a copy command, will deal with the later
+			if (statusDocument != null)
+			{
+				copyElement = (Element) XMLUtils.selectSingleNode(statusDocument, "//copy[@name = '"+jarFileName+"']");
+				if (copyElement != null)
+				{
+					continue;
+				}
+				
+			}
+			
+			
 			// System.out.println("--->"+url.getProtocol()+"<-----");
 			URL jarFileURL = null;
 			if (url.getProtocol().startsWith("jar"))
 			{
-				jarFileURL = InstallAction.class.getClassLoader().getResource(fileElement.getAttribute("jarFileName"));
+				jarFileURL = UpdaterClient.classLoader.getResource(jarFileName);
 			}
 			else
 			{
-				jarFileURL = new URL(url.toExternalForm().replaceAll(DESCRIPTOR_DOCUMENT_NAME, "") + "/" + fileElement.getAttribute("jarFileName"));
+				jarFileURL = new URL(url.toExternalForm().replaceAll(DESCRIPTOR_DOCUMENT_NAME, "") + "/" + jarFileName);
 			}
 			// System.out.println(jarFileURL);
-			String key = (applicationDirectory + File.separator + fileElement.getAttribute("systemFileName"));
-			String name = (fileElement.getAttribute("name"));
+			
 			long size = 0;
 			try
 			{
@@ -201,25 +285,14 @@ public class InstallModel extends Thread
 		return installActionVector;
 	}
 
-	public void processUpdates() throws FileNotFoundException, IOException
-	{
+
 	
-		start();
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Thread#run()
-	 */
-	@Override
-	public void run()
+	public void processUpdates() throws FileNotFoundException, IOException
 	{
 		try
 		{
 			performInstallActions(installActionVector);
-			installActionVector.clear();
-			writeDescriptorFile(getDescriptorDocument(), applicationDirectory);		
+			installActionVector.clear();				
 
 		} catch (Exception e)
 		{
@@ -386,6 +459,15 @@ public class InstallModel extends Thread
 	public boolean isDone()
 	{
 		return isDone;
+	}
+
+	public void processScript() throws Exception
+	{
+		if (statusDocument != null)
+		{
+			centralServicesClient.processStatusDocument(statusDocument);
+		}
+		
 	}
 
 	

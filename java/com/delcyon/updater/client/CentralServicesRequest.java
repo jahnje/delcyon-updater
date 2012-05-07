@@ -86,15 +86,15 @@ public class CentralServicesRequest
             this.clientID = localVariables.get("HOSTNAME");
         }
 
-        if (clientElement.getAttribute("RequestType") != null)
+        if (clientElement.hasAttribute("RequestType") )
         {
             this.requestType = RequestType.valueOf(clientElement.getAttribute("RequestType"));
         }        
-        if (clientElement.getAttribute("controlName") != null)
+        if (clientElement.hasAttribute("controlName"))
         {
             this.controlName = clientElement.getAttribute("controlName");
         }
-        if (clientElement.getAttribute("copyName") != null)
+        if (clientElement.hasAttribute("copyName"))
         {
             this.copyName  = clientElement.getAttribute("copyName");
         }
@@ -152,8 +152,10 @@ public class CentralServicesRequest
             newControlElement.setAttribute("name", control.getName());
             Element controlElement = control.getNodeElement();
             NodeList controlElementChildren = controlElement.getChildNodes();
+            elementLoop:
             for (int index = 0; index < controlElementChildren.getLength(); index++)
             {   
+            	
                 if (controlElementChildren.item(index).getNodeType() != Node.ELEMENT_NODE)
                 {
                     continue;
@@ -189,7 +191,11 @@ public class CentralServicesRequest
                     	if (copy != null)
                     	{                                
                     	    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    	    md5 = copy.processRequest(this, byteArrayOutputStream);                                                                                                
+                    	    md5 = copy.processRequest(this, byteArrayOutputStream);
+                    	    if (md5 == null)
+                    	    {
+                    	    	continue elementLoop;
+                    	    }
                     	}
 
                     	if (md5 != null)

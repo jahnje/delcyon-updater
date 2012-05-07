@@ -63,7 +63,13 @@ public class InstallerBuildTask extends Task
 			Manifest manifest = new Manifest();
 			manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 			manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, "com.delcyon.updater.client.UpdaterClient");
-			FileOutputStream distributionFileOutputStream = new FileOutputStream(distributionFileName, false);
+			File distributionFile = new File(getProject().getBaseDir(),distributionFileName);
+			System.out.println(new File(".").getCanonicalPath());
+			if (distributionFile.exists() == false)
+			{
+				distributionFile.createNewFile();
+			}
+			FileOutputStream distributionFileOutputStream = new FileOutputStream(distributionFile, false);
 			JarOutputStream distributionJarOutputStream = new JarOutputStream(distributionFileOutputStream, manifest);
 			log("Storing class files");
 			storeInstallerClassFiles(distributionJarOutputStream);
@@ -169,6 +175,10 @@ public class InstallerBuildTask extends Task
 		applicationDescriptorElement.setAttribute("installDirectory", applicationDescriptor.getInstallDirectory());
 		applicationDescriptorElement.setAttribute("executable", applicationDescriptor.getExecutable());
 		applicationDescriptorElement.setAttribute("ignoredDirectories", applicationDescriptor.getIgnoredDirectories());
+		if (applicationDescriptor.getInstallDocumentPath() != null)
+		{
+			applicationDescriptorElement.setAttribute("installDocumentPath", applicationDescriptor.getInstallDocumentPath());
+		}
 		if (applicationDescriptor.getIcon() != null)
 		{
 			applicationDescriptorElement.setAttribute("icon", applicationDescriptor.getIcon());

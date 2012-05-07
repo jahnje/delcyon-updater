@@ -8,7 +8,13 @@ public class UpdaterClient
 	public static final String CLOSE_COMMAND = "closeCommand";
 	public static final String UPDATE_COMMAND = "updateCommand";
 	public static final int HAS_UPDATES = 2;
+	public static ClassLoader classLoader = null;
 
+	
+	public static void setClassLoader(ClassLoader classLoader)
+	{
+		UpdaterClient.classLoader = classLoader;
+	}
 	/**
 	 * @param args
 	 */
@@ -37,13 +43,20 @@ public class UpdaterClient
      */
 	private void runHeadlessInstall()
 	{
-		installModel = new InstallModel(UpdaterClient.class.getClassLoader().getResource(InstallModel.DESCRIPTOR_DOCUMENT_NAME));
+		if (UpdaterClient.classLoader == null)
+		{
+			System.out.println("set local classloader");
+			UpdaterClient.classLoader = UpdaterClient.class.getClassLoader();
+		}
+		installModel = new InstallModel(UpdaterClient.classLoader.getResource(InstallModel.DESCRIPTOR_DOCUMENT_NAME));		
 		try
 		{
 			System.out.println("Checking for updates");
 			installModel.checkForUpdates();
 			System.out.println("Processing updates");
 			installModel.processUpdates();
+			System.out.println("Processing install script");
+			installModel.processScript();
 			System.out.println("Processing done");
 		} catch (Exception exception)
 		{

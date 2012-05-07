@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<applicationDescriptor name="com.delcyon.TestApplication" installDirectory="Delcyon Test"  executable="test.jar" icon="test.ico">
-    <fileDescriptor name="test.jar" jarFileName="test.jar" systemFileName="test.jar"/>
-    <fileDescriptor name="test.jar" jarFileName="test.jar" systemFileName="test.ico"/>
-    <fileDescriptor name="testLib.jar" jarFileName="test.jar" systemFileName="lib/testLib.jar"/>
-    <fileDescriptor name="testLib2.jar" jarFileName="test.jar" systemFileName="lib/lib/testLib2_fromdesfile.jar"/>
-    <fileDescriptor name="testLib2.jar" jarFileName="test.jar" systemFileName="lib/lib/testLib3_fromdesfile.jar"/>
-    <fileDescriptor name="testLib2.jar" jarFileName="test.jar" systemFileName="lib/lib/testLib4_fromdesfile.jar"/>
-</applicationDescriptor>

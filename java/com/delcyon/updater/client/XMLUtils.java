@@ -60,6 +60,16 @@ public class XMLUtils
         return result; 
     }
     
+    public static String evaluateXPathString(Node node, String path) throws Exception
+    {
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+
+        XPathExpression xPathExpression = xPath.compile(path);
+        String result = (String) xPathExpression.evaluate(node, XPathConstants.STRING);
+        return result; 
+    }
+    
     public static void removeNamespaceDeclarations(Node node, String... namespaces)
     {
         NamedNodeMap namedNodeMap = ((Element) node).getAttributes();

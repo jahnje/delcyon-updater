@@ -150,8 +150,8 @@ public class VersionControl
         {
             copysrcDir = "";
         }
-        File masterFile = new File(copysrcDir + masterFileName);
-        FileInputStream fileInputStream = new FileInputStream(masterFile);
+        
+        InputStream fileInputStream = UpdaterClient.classLoader.getResource(masterFileName).openStream();
         MD5FilterOutputStream md5rootOutputStream = new MD5FilterOutputStream(outputStream);
         OutputStream rootOutputStream = md5rootOutputStream;
 

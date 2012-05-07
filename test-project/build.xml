@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="TestTask"  default="test">
+	<property name="build.dir" value="./build"/>
+	<property name="lib.dir" value="./lib"/>	
+	<property name="src.dir" value="./java"/>
+	<property name="distribution.dir" value="distribution"/>
+	<property name="build.classes" value="${build.dir}/classes" />
+	<property name="updater.dir" value="../build" />
+	<property name="test.lib.src.dir" value="test-lib-java" />
+	<property name="test.lib.build.dir" value="test-lib.build" />
+	<property name="test.lib" value="${lib.dir}/testlib.jar" />
+	<property name="install.dir" value="test-app" />
+	
+	<path id="compile.classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>		
+	</path>
+
+	<target name="prepare">
+		   <mkdir dir="${test.lib.build.dir}"/>
+		   <javac srcdir="${test.lib.src.dir}" destdir="${test.lib.build.dir}"/>
+		   <jar destfile="${lib.dir}/testlib.jar" >
+				<fileset dir="${test.lib.build.dir}" id="id">
+					<include name="**/*.class" />
+				</fileset>						
+			</jar>
+		   <RequiredLibrariesBuildTask propertyname="required.libraries" verbose="true">
+				<fileset dir=".">
+					<include name="lib/**/*" />
+				</fileset>
+			</RequiredLibrariesBuildTask>
+			<mkdir dir="${build.dir}"/>
+			<mkdir dir="${distribution.dir}"/>
+			<mkdir dir="${build.classes}"/>
+	</target>
+	
+	<target name="clean">		
+			<delete dir="${build.dir}"/>
+		    <delete dir="${distribution.dir}"/>
+			<delete dir="META-INF"/>
+		    <delete dir="${test.lib.build.dir}"/>
+		    <delete dir="${test.lib}"/>
+			<delete dir="${install.dir}"/>
+	</target>
+	
+	<target name="compile" depends="prepare">
+			<javac srcdir="${src.dir}" destdir="${build.classes}" debug="on" >
+				<classpath refid="compile.classpath"/>
+			</javac>
+		</target>
+	
+	<target name="create_jar" depends="compile">
+			<echo>Building Jar File</echo>
+					<jar destfile="${distribution.dir}/app.jar" >
+						<fileset dir="${build.classes}" id="id">
+							<include name="**/*.class" />
+						</fileset>						
+															
+						<manifest>
+							<attribute name="Main-Class" value="com.test.Application" />
+							<attribute name="Class-Path" value="${required.libraries}" />
+						</manifest>					
+					</jar>					
+		</target>
+	
+	
+	<taskdef name="InstallerBuildTask" classname="com.delcyon.updater.client.InstallerBuildTask"  classpathref="compile.classpath" classpath="${updater.dir}"/>
+	<taskdef name="CallURLBuildTask" classname="com.delcyon.updater.client.CallURLBuildTask"  classpathref="compile.classpath" classpath="${updater.dir}"/>
+	<typedef name="Parameter" classname="com.delcyon.updater.client.CallURLBuildTask$Parameter"  classpathref="compile.classpath" classpath="${updater.dir}"/>
+	<taskdef name="RequiredLibrariesBuildTask" classname="com.delcyon.updater.client.RequiredLibrariesBuildTask" classpathref="compile.classpath" classpath="${updater.dir}"/>
+	
+	<target name="test" description="Taskdef's the Find-Task" depends="create_jar">
+		<InstallerBuildTask distributionfilename="${distribution.dir}/distribution.jar" >
+			<fileset dir="${distribution.dir}">
+				<include name="**" />
+				<exclude name="distribution.jar" />
+			</fileset>
+			<fileset dir=".">
+				<include name="config/**/*" />
+				<include name="install/**/*" />
+				<include name="bin/**/*" />
+				<include name="lib/**/*" />
+			</fileset>
+			<applicationDescriptor name="com.test.Application" installDirectory="${install.dir}"  executable="app.jar" installDocumentPath="install/install.xml">
+
+			</applicationDescriptor>
+		</InstallerBuildTask>
+	</target>
+	
+	
+
+
+</project>

@@ -19,7 +19,7 @@ import org.w3c.dom.Element;
  */
 public class CentralServices extends CSNode
 {
-    private URL location;
+ 
     /**
      * @param location
      * @throws Exception 
@@ -31,12 +31,13 @@ public class CentralServices extends CSNode
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         Document document = documentBuilder.parse(location.openStream());
         CentralServices centralServices = new CentralServices(document.getDocumentElement());
-        //location is a special case since it's not listed as an import, but need to be checked for changes
-        centralServices.location = location;
+        //location is a special case since it's not listed as an import, but need to be checked for changes 
         return centralServices;
         
     }
    
+    
+    
     public CentralServices(Element nodeElement) throws Exception {
 		super(null, nodeElement);
 	}

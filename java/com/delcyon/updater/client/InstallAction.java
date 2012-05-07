@@ -11,6 +11,8 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.w3c.dom.Element;
+
 
 public class InstallAction {
 	
@@ -52,7 +54,7 @@ public class InstallAction {
 		this.systemFileName = systemFileName;
 		this.size = size;
 		this.name = name;
-		this.md5sum = md5Sum;
+		this.md5sum = md5Sum;		
 	}
 
 	public InstallAction(int actionToTake, String executableFileName,String name,String applicationDirectory,String md5Sum) {		
@@ -130,28 +132,29 @@ public class InstallAction {
 		}
 		
 		if (finalOutputfileName != null) {
-			FileOutputStream fileOutputStream = new FileOutputStream(finalOutputfileName);
-			long totalDataRead = 0;
-			if (jarFileURL != null) {
-				InputStream inputStream = new FileInputStream(tempFileName);
-
-				System.out.print("writing " + tempFileName + " ...");
-				byte[] inputBuffer = new byte[1024];
-				int value = 0;
-				while (true) {
-					value = inputStream.read(inputBuffer);
-					totalDataRead += value;
-					if (value < 0) {
-						break;
-					}
-					fileOutputStream.write(inputBuffer, 0, value);
-					setProgress(totalDataRead);
-				}
-
-				inputStream.close();
-			}
-			fileOutputStream.flush();
-			fileOutputStream.close();
+			new File(tempFileName).renameTo(new File(finalOutputfileName));
+//			FileOutputStream fileOutputStream = new FileOutputStream(finalOutputfileName);
+//			long totalDataRead = 0;
+//			if (jarFileURL != null) {
+//				InputStream inputStream = new FileInputStream(tempFileName);
+//
+//				System.out.print("writing " + tempFileName + " ...");
+//				byte[] inputBuffer = new byte[1024];
+//				int value = 0;
+//				while (true) {
+//					value = inputStream.read(inputBuffer);
+//					totalDataRead += value;
+//					if (value < 0) {
+//						break;
+//					}
+//					fileOutputStream.write(inputBuffer, 0, value);
+//					setProgress(totalDataRead);
+//				}
+//
+//				inputStream.close();
+//			}
+//			fileOutputStream.flush();
+//			fileOutputStream.close();
 		}
 		setStatus(DONE);
 	}
@@ -254,10 +257,9 @@ public class InstallAction {
 	 */
 	private void insureDirectoryExists(File parentFile) {
 		//System.out.println(parentFile.getName());
-		if (parentFile != null && parentFile.exists() == false){
-			insureDirectoryExists(parentFile.getParentFile());
+		if (parentFile != null && parentFile.exists() == false){			
 			System.out.println("creating "+parentFile.getAbsolutePath().replaceAll("/", File.separator));
-			parentFile.mkdir();
+			parentFile.mkdirs();
 		}
 		
 	}

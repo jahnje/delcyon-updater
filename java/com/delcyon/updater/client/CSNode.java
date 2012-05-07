@@ -46,7 +46,7 @@ public abstract class CSNode {
 	
 	protected Element loadElement(Element initialNodeElement) throws Exception
     {
-    	if (initialNodeElement.getAttribute("import") != null)
+    	if (initialNodeElement.hasAttribute("import"))
         {
             String importValue = initialNodeElement.getAttribute("import");
            
@@ -146,7 +146,7 @@ public abstract class CSNode {
  
     public void setVar(String key, String value)
     {        
-    	CentralServicesClient.logger.log(Level.FINER, "Storing '"+key+"' => '"+value+"'");
+    	//CentralServicesClient.logger.log(Level.FINER, "Storing '"+key+"' => '"+value+"'");
     	localVariables.put(key, value);
     }
 
@@ -302,7 +302,7 @@ public abstract class CSNode {
      */
     protected String getImportValue()
     {
-    	if(nodeElement.getAttribute("import") != null)
+    	if(nodeElement.hasAttribute("import"))
 		{
 			return nodeElement.getAttribute("import");
 		}

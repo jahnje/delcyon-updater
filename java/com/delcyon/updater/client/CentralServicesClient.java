@@ -41,7 +41,7 @@ import com.delcyon.updater.client.LeveledConsoleHandler.Output;
 public class CentralServicesClient
 {
 
-    public static Level LOGGING_LEVEL = Level.ALL;
+    public static Level LOGGING_LEVEL = Level.INFO;
     public static Logger logger = null;
     private static LeveledConsoleHandler leveledConsoleHandler;
     private static FileHandler fileHandler;
@@ -131,7 +131,7 @@ public class CentralServicesClient
      * @param statusDocument
      * @throws Exception 
      */
-    private void processStatusDocument(Document statusDocument) throws Exception
+    void processStatusDocument(Document statusDocument) throws Exception
     {
         NodeList controlElementList = statusDocument.getDocumentElement().getChildNodes();
         for (int index = 0; index < controlElementList.getLength(); index++)
@@ -196,7 +196,7 @@ public class CentralServicesClient
             {
                 if (processingPropertiesHashtable.get(ifProperty).equals("true") == false)
                 {
-                    if (childElement.getAttribute("onSkip") != null)
+                    if (childElement.hasAttribute("onSkip"))
                     {
                         processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
                     }
@@ -207,7 +207,7 @@ public class CentralServicesClient
             else
             {
                 CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
-                if (childElement.getAttribute("onSkip") != null)
+                if (childElement.hasAttribute("onSkip"))
                 {
                     processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
                 }
@@ -294,31 +294,31 @@ public class CentralServicesClient
             String masterFileName = childElement.getAttribute("name");
             String destinationFileName = childElement.getAttribute("dest");
             String ifProperty = childElement.getAttribute("if");
-            if (childElement.hasAttribute("if"))
-            {
-                if(processingPropertiesHashtable.containsKey(ifProperty))
-                {
-                    if (processingPropertiesHashtable.get(ifProperty).equals("true") == false)
-                    {
-                        if (childElement.hasAttribute("onSkip"))
-                        {
-                            processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
-                        }
-                        CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
-                        return false;
-                    }
-                }
-                else
-                {
-                    CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
-                    if (childElement.hasAttribute("onSkip"))
-                    {
-                        processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
-                    }
-                    return false;    
-                }
-            }
-            CentralServicesClient.logger.log(Level.FINE, "Processing Copy Element "+masterFileName+" ==> "+destinationFileName);
+//            if (childElement.hasAttribute("if"))
+//            {
+//                if(processingPropertiesHashtable.containsKey(ifProperty))
+//                {
+//                    if (processingPropertiesHashtable.get(ifProperty).equals("true") == false)
+//                    {
+//                        if (childElement.hasAttribute("onSkip"))
+//                        {
+//                            processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
+//                        }
+//                        CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
+//                        return false;
+//                    }
+//                }
+//                else
+//                {
+//                    CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
+//                    if (childElement.hasAttribute("onSkip"))
+//                    {
+//                        processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
+//                    }
+//                    return false;    
+//                }
+//            }
+            CentralServicesClient.logger.log(Level.INFO, "Processing Copy Element "+masterFileName+" ==> "+destinationFileName);
             File file = new File(destinationFileName);
             if (file.exists() == false)
             {
@@ -351,15 +351,15 @@ public class CentralServicesClient
                 
                 processCopyOutput(destinationFileName, new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
                 
-                if (childElement.getAttribute("chmod") != null)
+                if (childElement.hasAttribute("chmod"))
                 {
                     runCommand("/bin/chmod "+childElement.getAttribute("chmod")+" "+destinationFileName, null);
                 }
-                if (childElement.getAttribute("chown") != null)
+                if (childElement.hasAttribute("chown"))
                 {
                     runCommand("/bin/chown "+childElement.getAttribute("chown")+" "+destinationFileName, null);
                 }
-                if (childElement.getAttribute("onAction") != null)
+                if (childElement.hasAttribute("onAction"))
                 {
                     processingPropertiesHashtable.put(childElement.getAttribute("onAction"),"true");
                 }
@@ -368,7 +368,7 @@ public class CentralServicesClient
             else
             {
                 CentralServicesClient.logger.log(Level.FINE, "File already up to date, skipping.");
-                if (childElement.getAttribute("onSkip") != null)
+                if (childElement.hasAttribute("onSkip"))
                 {
                     processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
                 }
@@ -379,7 +379,7 @@ public class CentralServicesClient
         {
             
             e.printStackTrace();
-            if (childElement.getAttribute("onError") != null)
+            if (childElement.hasAttribute("onError"))
             {
                 processingPropertiesHashtable.put(childElement.getAttribute("onError"),"true");
             }
@@ -411,7 +411,7 @@ public class CentralServicesClient
         outputStream.flush();
     }
 
-    private Document initDocument() throws Exception
+    public static Document initDocument() throws Exception
     {
         
         
@@ -445,6 +445,14 @@ public class CentralServicesClient
         return document;
     }
 
-   
+    public CentralServices getCentralServices()
+    {
+    	return centralServices;
+    }
+
+    public void setCentralServices(CentralServices centralServices)
+    {
+    	this.centralServices = centralServices;
+    }
 
 }

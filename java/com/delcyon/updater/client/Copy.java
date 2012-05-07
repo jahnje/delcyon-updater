@@ -4,6 +4,7 @@
 package com.delcyon.updater.client;
 
 import java.io.OutputStream;
+import java.util.logging.Level;
 
 import org.w3c.dom.Element;
 
@@ -46,8 +47,19 @@ public class Copy extends CSNode
      * @throws Exception 
      */
     public String processRequest(CentralServicesRequest centralServicesRequest, OutputStream outputStream) throws Exception
-    {       
-        return VersionControl.getVersionControl().readClientVersionStreamIntoOutputStream(getVar(centralServicesRequest, "name",false), outputStream, centralServicesRequest, getChildVector());    
+    {
+    	if (getNodeElement().hasAttribute("if"))    	
+    	{
+    		String xpath = processVariablesInString(null, getNodeElement().getAttribute("if"),true);    		
+    		boolean result = XMLUtils.evaluateXPath(getNodeElement(), xpath);
+    		CentralServicesClient.logger.log(Level.INFO, "evaluating "+xpath+" "+result);
+    		if (result == false)
+    		{
+    			outputStream.close();
+    			return null;    	            
+    		}
+    	}
+    	return VersionControl.getVersionControl().readClientVersionStreamIntoOutputStream(getVar(centralServicesRequest, "name",false), outputStream, centralServicesRequest, getChildVector());    
     }
 
     public String getVersion(CentralServicesRequest centralServicesRequest) throws Exception

@@ -10,6 +10,7 @@ public class ApplicationDescriptor {
 	private String executable = null;
 	private String icon = null;
 	private String ignoredDirectories = null;
+	private String installDocumentPath;
 	
 	public final String getInstallDirectory() {
 		return installDirectory;
@@ -57,4 +58,13 @@ public class ApplicationDescriptor {
 		this.ignoredDirectories = ignoredDirectories;
 	}
 	
+	public final void setInstallDocumentPath(String installDocumentPath)
+	{
+		this.installDocumentPath = installDocumentPath;
+	}
+	
+	public String getInstallDocumentPath()
+	{
+		return installDocumentPath;
+	}
 }
