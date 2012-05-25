@@ -41,10 +41,17 @@ import org.w3c.dom.NodeList;
 public class XMLUtils
 {
 
-    public static Node selectSingleNode(Node node, String path) throws Exception
+    private static XPathFactory getXPathFactory()
     {
         XPathFactory xPathFactory = XPathFactory.newInstance();
-        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+        xPathFactory.setXPathFunctionResolver(new XPathFunctionResolverImpl());
+        return xPathFactory;
+    }
+    
+    public static Node selectSingleNode(Node node, String path) throws Exception
+    {
+        
+        javax.xml.xpath.XPath xPath = getXPathFactory().newXPath();
 
         XPathExpression xPathExpression = xPath.compile(path);
         return (Node) xPathExpression.evaluate(node, XPathConstants.NODE);
@@ -52,8 +59,8 @@ public class XMLUtils
 
     public static boolean evaluateXPath(Node node, String path) throws Exception
     {
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+        
+        javax.xml.xpath.XPath xPath = getXPathFactory().newXPath();
 
         XPathExpression xPathExpression = xPath.compile(path);
         Boolean result = (Boolean) xPathExpression.evaluate(node, XPathConstants.BOOLEAN);
@@ -62,8 +69,8 @@ public class XMLUtils
     
     public static String evaluateXPathString(Node node, String path) throws Exception
     {
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+        
+        javax.xml.xpath.XPath xPath = getXPathFactory().newXPath();
 
         XPathExpression xPathExpression = xPath.compile(path);
         String result = (String) xPathExpression.evaluate(node, XPathConstants.STRING);
@@ -95,8 +102,8 @@ public class XMLUtils
     public static NodeList selectNodes(Node node, String path) throws Exception
     {
 
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+       
+        javax.xml.xpath.XPath xPath = getXPathFactory().newXPath();
         XPathExpression xPathExpression = xPath.compile(path);
         return (NodeList) xPathExpression.evaluate(node, XPathConstants.NODESET);
     }
@@ -104,8 +111,8 @@ public class XMLUtils
     public static String selectSingleNodeValue(Element node, String path) throws Exception
     {
 
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        javax.xml.xpath.XPath xPath = xPathFactory.newXPath();
+       
+        javax.xml.xpath.XPath xPath = getXPathFactory().newXPath();
 
         XPathExpression xPathExpression = xPath.compile(path);
         return xPathExpression.evaluate(node);

@@ -3,27 +3,35 @@
  */
 package com.delcyon.updater.client;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.junit.Test;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -38,7 +46,7 @@ import com.delcyon.updater.client.LeveledConsoleHandler.Output;
  * @version $Id: $
  */
 
-public class CentralServicesClient
+public class CentralServicesClient 
 {
 
     public static Level LOGGING_LEVEL = Level.INFO;
@@ -54,11 +62,11 @@ public class CentralServicesClient
         @Override
         public synchronized String put(String key, String value)
         {
-            System.out.println("putting "+key+" ==> "+value);
+            //System.out.println("putting "+key+" ==> "+value);
             return super.put(key, value);
         }
     };
-    private CentralServices centralServices;
+   
     
     /**
      * @throws Exception 
@@ -86,6 +94,20 @@ public class CentralServicesClient
             fileHandler.setLevel(LOGGING_LEVEL);
             logger.addHandler(fileHandler);
         }
+        
+     // load environment
+        Set<Entry<String, String>> envEntrySet = System.getenv().entrySet();
+        for (Entry<String, String> entry : envEntrySet)
+        {
+            processingPropertiesHashtable.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+
+        // load system properties
+        Set<Entry<Object, Object>> propEntrySet = System.getProperties().entrySet();
+        for (Entry<Object, Object> entry : propEntrySet)
+        {
+            processingPropertiesHashtable.put(entry.getKey().toString(), entry.getValue().toString());
+        }
     }
     
     /* (non-Javadoc)
@@ -96,23 +118,7 @@ public class CentralServicesClient
         return "Central Services Client";
     }
     
-    /* (non-Javadoc)
-     * @see com.delcyon.cs.application.Application#loadConfiguration()
-     */
     
-    @Test
-    public void testProcessStatusDocument() throws Exception
-    {
-        
-        centralServices = CentralServices.loadCentralServices(new File("test_resources/test_install.xml").toURL());        
-        Document requestDocument = initDocument();
-        requestDocument.getDocumentElement().setAttribute("RequestType", "STATUS_CHECK");
-        CentralServicesRequest centralServicesRequest = new CentralServicesRequest(requestDocument.getDocumentElement(),centralServices);
-        
-        Document statusDocument = centralServicesRequest.processStatusCheck();
-        processStatusDocument(statusDocument);
-    }
-   
     
 
     
@@ -163,29 +169,109 @@ public class CentralServicesClient
     private void processControlElement(Element controlElement) throws Exception
     {
         CentralServicesClient.logger.log(Level.FINE, "Processing Control Element "+controlElement.getAttribute("name"));
-        NodeList childList = controlElement.getChildNodes();
-        for (int index = 0; index < childList.getLength(); index++)
-        {
-            if (childList.item(index).getNodeType() != Node.ELEMENT_NODE)
-            {
-                continue;
-            }
-            Element childElement = (Element) childList.item(index);
-            ControlType controlType = ControlType.valueOf(childElement.getNodeName());
+       
+            
+            
+            
+            ControlType controlType = ControlType.valueOf(controlElement.getNodeName());
             switch (controlType)
             {
                 case copy:
-                    processCopyElement(controlElement.getAttribute("name"),childElement);
+                    processCopyElement(controlElement);
                     break;
                 case file:
                     break;
+                case ask:                   
+                    processAskElement(controlElement);
+                    break;
                 case shellcommand:
-                    processShellCommand(childElement);
-                    break;                
+                    processShellCommand(controlElement);
+                    break;
+                case pref:
+                    processPrefElement(controlElement);
+                    break;
                 default:
+                  //load attributes if we don't know what kind of element this is
+                    NamedNodeMap atrributeList = controlElement.getAttributes();
+                    for (int attributeIndexindex = 0; attributeIndexindex < atrributeList.getLength() ; attributeIndexindex++)
+                    {                        
+                        Attr attribute = (Attr) atrributeList.item(attributeIndexindex);
+                        setVar(attribute.getName(), attribute.getValue());                      
+                    }
                     break;
             }
+        
+    }
+
+    /**
+     * @param childElement
+     */
+    private void processPrefElement(Element childElement) throws Exception
+    {
+        String path = processVariablesInString(childElement.getAttribute("path"),true);
+        Preferences preferences =  Preferences.systemRoot().node(path);
+        
+        if (childElement.hasAttribute("set"))
+        {
+            String preferenceName =  processVariablesInString(childElement.getAttribute("set"),true);
+            String varName = processVariablesInString(childElement.getAttribute("var"),true);
+            if (childElement.hasAttribute("var") == false)
+            {
+                varName = preferenceName;
+            }
+            preferences.put(preferenceName, getVar(varName));
+            preferences.sync();
         }
+       
+        if (childElement.hasAttribute("get"))
+        {
+            String preferenceName =  processVariablesInString(childElement.getAttribute("get"),true);
+            String property = processVariablesInString(childElement.getAttribute("var"),true);
+            if (childElement.hasAttribute("var") == false)
+            {
+                property = preferenceName;
+            }
+            setVar(property, preferences.get(preferenceName, ""));
+        }
+    }
+
+    /**
+     * @param childElement
+     * @throws Exception 
+     */
+    private void processAskElement(Element childElement) throws Exception
+    {
+      
+          if (childElement.hasAttribute("if"))
+          {
+              String xpath = processVariablesInString( childElement.getAttribute("if"),true);
+              CentralServicesClient.logger.log(Level.FINE, "evaluating "+xpath);
+              boolean result = XMLUtils.evaluateXPath(childElement, xpath);
+              if (result == false)
+              {
+                  return;                    
+              }
+          }
+          System.out.println(childElement.getAttribute("message"));
+          if(childElement.hasAttribute("default"))
+          {
+              String defaultValue = processVariablesInString(childElement.getAttribute("default"),false);
+              if (defaultValue.isEmpty() == false)
+              {
+                  setVar(childElement.getAttribute("var"), defaultValue);
+                  System.out.println("Default ["+defaultValue+"]");
+              }
+              
+          }
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            String value = br.readLine();
+            if (value.isEmpty() == false)
+            {
+                setVar(childElement.getAttribute("var"), value);
+            }
+            
+      
+      
     }
 
     private void processShellCommand(Element childElement) throws Exception {
@@ -285,15 +371,28 @@ public class CentralServicesClient
     }
     
     /**
-     * @param childElement
+     * @param copyElement
      */
-    private boolean processCopyElement(String controlName,Element childElement)
+    private boolean processCopyElement(Element copyElement)
     {
         try
         {
-            String masterFileName = childElement.getAttribute("name");
-            String destinationFileName = childElement.getAttribute("dest");
-            String ifProperty = childElement.getAttribute("if");
+            String masterFileName = processVariablesInString(copyElement.getAttribute("src"),true);
+            String destinationFileName =  processVariablesInString(copyElement.getAttribute("dest"),true);
+            //String ifProperty =  processVariablesInString(childElement.getAttribute("if"),true);
+
+            if (copyElement.hasAttribute("if"))
+            {
+                String xpath = processVariablesInString(copyElement.getAttribute("if"),true);            
+                boolean result = XMLUtils.evaluateXPath(copyElement, xpath);
+                CentralServicesClient.logger.log(Level.FINE, "evaluating "+xpath+" "+result);
+                if (result == false)
+                {
+                    return false;                    
+                }
+            }
+            
+            
 //            if (childElement.hasAttribute("if"))
 //            {
 //                if(processingPropertiesHashtable.containsKey(ifProperty))
@@ -333,44 +432,49 @@ public class CentralServicesClient
                 file.createNewFile();
                 
             }
-            String md5 = FileUtility.getMD5ForFile(childElement.getAttribute("dest"));
-            if (md5 == null || childElement.getAttribute("md5").equals(md5) == false)
+            String srcMD5 = null;
+            if (copyElement.hasAttribute("md5"))
             {
-                Document requestDocument = initDocument();
-                requestDocument.getDocumentElement().setAttribute("RequestType", "COPY");
-                requestDocument.getDocumentElement().setAttribute("controlName", controlName);
-                requestDocument.getDocumentElement().setAttribute("copyName", masterFileName);
+                srcMD5 = copyElement.getAttribute("md5");
+            }
+            else
+            {
+                OutputStream nullOutputStream = new OutputStream(){@Override public void write(int b) throws IOException{}};
+                srcMD5 = readClientVersionStreamIntoOutputStream(masterFileName, nullOutputStream,copyElement);
+            }
+            String destMd5 = FileUtility.getMD5ForFile(destinationFileName);
+            if (destMd5 == null || srcMD5.equals(destMd5) == false)
+            {
                 
-                CentralServicesRequest client = CentralServicesRequest.loadClient(requestDocument.getDocumentElement(),centralServices);
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                if (client != null)
-                {
-                    client.processRequest(byteArrayOutputStream);
-                }
-                //System.out.println(new String(byteArrayOutputStream.toByteArray()));
                 
-                processCopyOutput(destinationFileName, new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
                 
-                if (childElement.hasAttribute("chmod"))
+                CentralServicesClient.logger.log(Level.INFO, "Copying "+destinationFileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(destinationFileName, false);
+                
+                readClientVersionStreamIntoOutputStream(masterFileName, fileOutputStream, copyElement);
+                
+               
+                
+                if (copyElement.hasAttribute("chmod"))
                 {
-                    runCommand("/bin/chmod "+childElement.getAttribute("chmod")+" "+destinationFileName, null);
+                    runCommand("/bin/chmod "+copyElement.getAttribute("chmod")+" "+destinationFileName, null);
                 }
-                if (childElement.hasAttribute("chown"))
+                if (copyElement.hasAttribute("chown"))
                 {
-                    runCommand("/bin/chown "+childElement.getAttribute("chown")+" "+destinationFileName, null);
+                    runCommand("/bin/chown "+copyElement.getAttribute("chown")+" "+destinationFileName, null);
                 }
-                if (childElement.hasAttribute("onAction"))
+                if (copyElement.hasAttribute("onAction"))
                 {
-                    processingPropertiesHashtable.put(childElement.getAttribute("onAction"),"true");
+                    processingPropertiesHashtable.put(copyElement.getAttribute("onAction"),"true");
                 }
                 return true;
             }
             else
             {
-                CentralServicesClient.logger.log(Level.FINE, "File already up to date, skipping.");
-                if (childElement.hasAttribute("onSkip"))
+                CentralServicesClient.logger.log(Level.INFO, "File already up to date, skipping.");
+                if (copyElement.hasAttribute("onSkip"))
                 {
-                    processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
+                    processingPropertiesHashtable.put(copyElement.getAttribute("onSkip"),"true");
                 }
                 return false;
             }
@@ -379,21 +483,15 @@ public class CentralServicesClient
         {
             
             e.printStackTrace();
-            if (childElement.hasAttribute("onError"))
+            if (copyElement.hasAttribute("onError"))
             {
-                processingPropertiesHashtable.put(childElement.getAttribute("onError"),"true");
+                processingPropertiesHashtable.put(copyElement.getAttribute("onError"),"true");
             }
         }
         return false;
     }
    
-    private void processCopyOutput(String fileName, InputStream inputStream) throws Exception
-    {
-        CentralServicesClient.logger.log(Level.INFO, "Copying "+fileName);
-        FileOutputStream fileOutputStream = new FileOutputStream(fileName, false);
-        readStreamIntoOutputStream(inputStream, fileOutputStream);
-        inputStream.close();
-    }
+    
 
     private void readStreamIntoOutputStream(InputStream inputStream, OutputStream outputStream) throws Exception
     {
@@ -445,14 +543,179 @@ public class CentralServicesClient
         return document;
     }
 
-    public CentralServices getCentralServices()
+   
+
+    public boolean hasVar(String varName)
     {
-    	return centralServices;
+        return processingPropertiesHashtable.containsKey(varName);
+    }
+ 
+    public void setVar(String key, String value)
+    {        
+        CentralServicesClient.logger.log(Level.FINE, "Storing '"+key+"' => '"+value+"'");
+        processingPropertiesHashtable.put(key, value);
     }
 
-    public void setCentralServices(CentralServices centralServices)
+    /**
+     * @param varName
+     * @return
+     */
+    public String getVar(String varName)
     {
-    	this.centralServices = centralServices;
+        return getVar(varName,false);
+    }
+    
+    
+    public String getVar(String varName,boolean emptyOK)
+    {
+        //Thread.dumpStack();
+        String value = "";
+        
+         
+       
+
+        if (value.length() == 0)
+        {
+            //check for var name replacement
+            if (varName.matches(".*\\$\\{.*\\}.*"))
+            {
+                varName = processVariablesInString(varName,emptyOK);
+            }
+
+
+
+            if (processingPropertiesHashtable.containsKey(varName))
+            {
+                value = processingPropertiesHashtable.get(varName);
+            }
+            
+        }
+        if (value.matches(".*\\$\\{.*\\}.*"))
+        {
+            value = processVariablesInString(value,emptyOK);
+        }
+        
+        return value;
+        
+    }
+    
+    
+    
+    public String processVariablesInString(String name,boolean emptyOK)
+    {
+        
+        String[] variables = getVariableNames(name);
+        for (String variableName : variables)
+        {
+            String replacement = getVar(variableName,emptyOK);
+            if (replacement.length() != 0 || emptyOK)
+            {
+                name = name.replaceAll("\\$\\{"+variableName+"\\}", replacement);
+            }            
+        }
+        return name;
+    }
+    
+    private String[] getVariableNames(String variableString)
+    {
+        String[] variables = {};
+        Vector<String> varNameVector = new Vector<String>();
+        String[] split = variableString.split("\\$");
+        for (String string : split)
+        {
+            if (string.startsWith("{"))
+            {
+                int endIndex = string.indexOf('}');
+                String varName = string.substring(1, endIndex);
+                varNameVector.add(varName);
+            }
+        }
+        return varNameVector.toArray(variables);
     }
 
+    /**
+     * 
+     * @param masterFileName
+     * @param outputStream
+     * @param copyElement
+     * @return md5 of written stream
+     * @throws Exception
+     */
+    public String readClientVersionStreamIntoOutputStream(String masterFileName, OutputStream outputStream,  Element copyElement) throws Exception
+    {
+        String copysrcDir = "";//Application.getConfiguration().getValue("CENTRAL_SERVICES_COPYSOURCE_DIR") + File.separator;
+        if (masterFileName.startsWith(File.separator))
+        {
+            copysrcDir = "";
+        }
+        
+        InputStream fileInputStream = UpdaterClient.classLoader.getResource(masterFileName).openStream();
+        MD5FilterOutputStream md5rootOutputStream = new MD5FilterOutputStream(outputStream);
+        OutputStream rootOutputStream = md5rootOutputStream;
+
+        NodeList childNodes = copyElement.getChildNodes();
+        for(int index = 0; index < childNodes.getLength(); index++)
+        {
+            if (childNodes.item(index) instanceof Element)
+            {
+                Element childElement = (Element) childNodes.item(index);
+                if (childElement.getNodeName().equals("filter"))
+                {
+                    CSFilterOutputStream filterOutputStream = new CSFilterOutputStream(processVariablesInString(childElement.getAttribute("trigger"),false),processVariablesInString(childElement.getAttribute("replacement"),false), rootOutputStream);
+                    rootOutputStream = filterOutputStream;
+                }
+            }
+        }
+        
+        
+
+        CentralServicesClient.logger.log(Level.FINE, "Copying " + masterFileName);
+        readStreamIntoOutputStream(fileInputStream, rootOutputStream);
+        return md5rootOutputStream.getMD5();
+    }
+
+    private class MD5FilterOutputStream extends FilterOutputStream
+    {
+        private MessageDigest messageDigest;
+
+        protected MD5FilterOutputStream(OutputStream out) throws NoSuchAlgorithmException
+        {
+            super(out);
+            messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest.reset();
+        }
+
+        @Override
+        public void write(int b) throws IOException
+        {
+            messageDigest.update((byte) b);
+            super.write(b);
+        }
+
+        /**
+         * override write method
+         */
+        @Override
+        public void write(byte[] data, int offset, int length) throws IOException
+        {
+            for (int i = offset; i < offset + length; i++)
+            {
+                this.write(data[i]);
+            }
+        }
+
+        /**
+         * override write method
+         */
+        @Override
+        public void write(byte[] b) throws IOException
+        {
+            write(b, 0, b.length);
+        }
+
+        public String getMD5()
+        {
+            return new BigInteger(1, messageDigest.digest()).toString(16);
+        }
+    }
 }

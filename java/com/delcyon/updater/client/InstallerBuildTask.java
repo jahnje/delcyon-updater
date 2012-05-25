@@ -109,10 +109,9 @@ public class InstallerBuildTask extends Task
 				{
 					FileDescriptor fileDescriptor = new FileDescriptor(new FileInputStream(fileSetRelativeDir + File.separator + fileName));
 					fileDescriptor.setJarFileName(fileName);
-					fileDescriptor.setSystemFileName(fileName);
-					fileDescriptor.setName(fileName);
+					fileDescriptor.setSystemFileName(fileName);					
 					log(fileName);
-					fileDescriptorHashtabe.put(fileDescriptor.getName(), fileDescriptor);
+					fileDescriptorHashtabe.put(fileName, fileDescriptor);
 
 				}
 			} catch (FileNotFoundException fileNotFoundException)
@@ -172,7 +171,7 @@ public class InstallerBuildTask extends Task
 		Element applicationDescriptorElement = document.createElement("applicationDescriptor");
 		document.appendChild(applicationDescriptorElement);
 		applicationDescriptorElement.setAttribute("name", applicationDescriptor.getName());
-		applicationDescriptorElement.setAttribute("installDirectory", applicationDescriptor.getInstallDirectory());
+		applicationDescriptorElement.setAttribute("applicationDirectory", applicationDescriptor.getApplicationDirectory());
 		applicationDescriptorElement.setAttribute("executable", applicationDescriptor.getExecutable());
 		applicationDescriptorElement.setAttribute("ignoredDirectories", applicationDescriptor.getIgnoredDirectories());
 		if (applicationDescriptor.getInstallDocumentPath() != null)

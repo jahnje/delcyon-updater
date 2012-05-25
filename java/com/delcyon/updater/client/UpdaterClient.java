@@ -51,12 +51,8 @@ public class UpdaterClient
 		installModel = new InstallModel(UpdaterClient.classLoader.getResource(InstallModel.DESCRIPTOR_DOCUMENT_NAME));		
 		try
 		{
-			System.out.println("Checking for updates");
-			installModel.checkForUpdates();
-			System.out.println("Processing updates");
-			installModel.processUpdates();
-			System.out.println("Processing install script");
-			installModel.processScript();
+		    System.out.println("Processing updates");			
+			installModel.checkForUpdates();			
 			System.out.println("Processing done");
 		} catch (Exception exception)
 		{

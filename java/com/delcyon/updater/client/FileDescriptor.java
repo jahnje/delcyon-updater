@@ -31,7 +31,7 @@ public class FileDescriptor
 			documentBuilderFactory.setNamespaceAware(false);
 			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();	
 			Document document = documentBuilder.newDocument();
-			fileDescriptorElement = document.createElement("fileDescriptor");
+			fileDescriptorElement = document.createElement("copy");
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			byte[] inputBuffer = new byte[1024];
 			while (true)
@@ -71,18 +71,7 @@ public class FileDescriptor
 	public final void setJarFileName(String jarFileName)
 	{
 		this.jarFileName = jarFileName;
-		fileDescriptorElement.setAttribute("jarFileName", jarFileName);
-	}
-
-	public final String getName()
-	{
-		return name;
-	}
-
-	public final void setName(String name)
-	{
-		this.name = name;
-		fileDescriptorElement.setAttribute("name", name);
+		fileDescriptorElement.setAttribute("src", jarFileName);
 	}
 
 	public final String getSystemFileName()
@@ -93,7 +82,7 @@ public class FileDescriptor
 	public final void setSystemFileName(String systemFileName)
 	{
 		this.systemFileName = systemFileName;
-		fileDescriptorElement.setAttribute("systemFileName", systemFileName);
+		fileDescriptorElement.setAttribute("dest", systemFileName);
 	}
 
 	public Element getElement()

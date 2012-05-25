@@ -6,18 +6,18 @@ package com.delcyon.updater.client;
 public class ApplicationDescriptor {	
 	
 	private String name = null;
-	private String installDirectory = null;
+	private String applicationDirectory = null;
 	private String executable = null;
 	private String icon = null;
 	private String ignoredDirectories = null;
 	private String installDocumentPath;
 	
-	public final String getInstallDirectory() {
-		return installDirectory;
+	public final String getApplicationDirectory() {
+		return applicationDirectory;
 	}
 	
-	public final void setInstallDirectory(String installDirectory) {
-		this.installDirectory = installDirectory;
+	public final void setApplicationDirectory(String applicationDirectory) {
+		this.applicationDirectory = applicationDirectory;
 	}
 	
 	public final String getName() {

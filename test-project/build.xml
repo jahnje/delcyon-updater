@@ -9,7 +9,7 @@
 	<property name="test.lib.src.dir" value="test-lib-java" />
 	<property name="test.lib.build.dir" value="test-lib.build" />
 	<property name="test.lib" value="${lib.dir}/testlib.jar" />
-	<property name="install.dir" value="test-app" />
+	<property name="app.dir" value="test-app" />
 	
 	<path id="compile.classpath">
 		<fileset dir="${lib.dir}">
@@ -65,13 +65,12 @@
 		</target>
 	
 	
-	<taskdef name="InstallerBuildTask" classname="com.delcyon.updater.client.InstallerBuildTask"  classpathref="compile.classpath" classpath="${updater.dir}"/>
-	<taskdef name="CallURLBuildTask" classname="com.delcyon.updater.client.CallURLBuildTask"  classpathref="compile.classpath" classpath="${updater.dir}"/>
-	<typedef name="Parameter" classname="com.delcyon.updater.client.CallURLBuildTask$Parameter"  classpathref="compile.classpath" classpath="${updater.dir}"/>
+	<taskdef name="InstallerBuildTask" classname="com.delcyon.updater.client.InstallerBuildTask"  classpathref="compile.classpath" classpath="${updater.dir}"/>		
 	<taskdef name="RequiredLibrariesBuildTask" classname="com.delcyon.updater.client.RequiredLibrariesBuildTask" classpathref="compile.classpath" classpath="${updater.dir}"/>
 	
 	<target name="test" description="Taskdef's the Find-Task" depends="create_jar">
 		<InstallerBuildTask distributionfilename="${distribution.dir}/distribution.jar" >
+			<applicationDescriptor name="com.test.Application" applicationDirectory="${app.dir}"  executable="app.jar" installDocumentPath="install/install.xml"/>
 			<fileset dir="${distribution.dir}">
 				<include name="**" />
 				<exclude name="distribution.jar" />
@@ -82,9 +81,9 @@
 				<include name="bin/**/*" />
 				<include name="lib/**/*" />
 			</fileset>
-			<applicationDescriptor name="com.test.Application" installDirectory="${install.dir}"  executable="app.jar" installDocumentPath="install/install.xml">
+			
 
-			</applicationDescriptor>
+			
 		</InstallerBuildTask>
 	</target>
 	

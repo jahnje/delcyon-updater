@@ -18,21 +18,21 @@ public class CSFilterOutputStream extends FilterOutputStream
     
     public static final int MAX_BUFFER_SIZE = 50;
     public static final int SYMBOL = '@';
-    private ByteArrayOutputStream buffer = new ByteArrayOutputStream();   
-    private CSFilter filter;
-    private int symbolCount = 0;
-    private CentralServicesRequest centralServicesRequest = null;
+    private ByteArrayOutputStream buffer = new ByteArrayOutputStream();       
+    private int symbolCount = 0;    
+    private String replacement = null;
+    private String trigger = null;
     
     
     /**
      * @param centralServicesRequest 
      * 
      */
-    public CSFilterOutputStream(CSFilter filter, OutputStream outputStream, CentralServicesRequest centralServicesRequest)
+    public CSFilterOutputStream(String trigger,String replacement, OutputStream outputStream)
     {
         super(outputStream);
-        this.filter = filter;
-        this.centralServicesRequest  = centralServicesRequest;
+        this.trigger = trigger;
+        this.replacement = replacement;
     }
 
     /**
@@ -60,10 +60,10 @@ public class CSFilterOutputStream extends FilterOutputStream
             else if (symbolCount == 3) //we've gotten a full variable declaration now, so see if it's something we know about
             {                
                 //trigger matches so output the new value, and then reset
-                if (filter.getTrigger().equals(buffer.toString()))
+                if (trigger.equals(buffer.toString()))
                 {
-                    byte[] replacement =  filter.getReplacement(centralServicesRequest);
-                    CentralServicesClient.logger.log(Level.FINER, "Replacing '"+(char)SYMBOL+(char)SYMBOL+filter.getTrigger()+(char)SYMBOL+(char)SYMBOL+"' with '"+new String(replacement)+"'");
+                    byte[] replacement =  this.replacement.getBytes();
+                    CentralServicesClient.logger.log(Level.FINER, "Replacing '"+(char)SYMBOL+(char)SYMBOL+trigger+(char)SYMBOL+(char)SYMBOL+"' with '"+new String(replacement)+"'");
                     out.write(replacement);                   
                     symbolCount = 0;
                 }
