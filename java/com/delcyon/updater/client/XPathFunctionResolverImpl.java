@@ -43,7 +43,7 @@ public class XPathFunctionResolverImpl implements XPathFunctionResolver
         else return null;
     }
 
-    private class XPathMatchesFunction implements XPathFunction
+    public class XPathMatchesFunction implements XPathFunction
     {
 
         /* (non-Javadoc)
@@ -60,7 +60,7 @@ public class XPathFunctionResolverImpl implements XPathFunctionResolver
         
     }
     
-    private class XPathReplaceAllFunction implements XPathFunction
+    public class XPathReplaceAllFunction implements XPathFunction
     {
 
         /* (non-Javadoc)

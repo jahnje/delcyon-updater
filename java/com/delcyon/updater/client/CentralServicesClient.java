@@ -55,17 +55,7 @@ public class CentralServicesClient
     private static FileHandler fileHandler;
     private static String logFileName = null;   
     
-    Hashtable<String, String> processingPropertiesHashtable = new Hashtable<String, String>(){
-        /* (non-Javadoc)
-         * @see java.util.Hashtable#put(java.lang.Object, java.lang.Object)
-         */
-        @Override
-        public synchronized String put(String key, String value)
-        {
-            //System.out.println("putting "+key+" ==> "+value);
-            return super.put(key, value);
-        }
-    };
+    private Hashtable<String, String> processingPropertiesHashtable = new Hashtable<String, String>();
    
     
     /**
@@ -439,7 +429,7 @@ public class CentralServicesClient
             }
             else
             {
-                OutputStream nullOutputStream = new OutputStream(){@Override public void write(int b) throws IOException{}};
+                OutputStream nullOutputStream = new NullOutputStream();
                 srcMD5 = readClientVersionStreamIntoOutputStream(masterFileName, nullOutputStream,copyElement);
             }
             String destMd5 = FileUtility.getMD5ForFile(destinationFileName);
@@ -674,7 +664,14 @@ public class CentralServicesClient
         return md5rootOutputStream.getMD5();
     }
 
-    private class MD5FilterOutputStream extends FilterOutputStream
+    public class NullOutputStream extends OutputStream
+    {
+        @Override 
+        public void write(int b) throws IOException{}
+    }
+    
+    
+    public class MD5FilterOutputStream extends FilterOutputStream
     {
         private MessageDigest messageDigest;
 

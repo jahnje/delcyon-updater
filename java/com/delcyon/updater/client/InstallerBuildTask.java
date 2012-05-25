@@ -33,6 +33,9 @@ import org.apache.tools.ant.types.FileSet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.delcyon.updater.client.XPathFunctionResolverImpl.XPathMatchesFunction;
+import com.delcyon.updater.client.XPathFunctionResolverImpl.XPathReplaceAllFunction;
+
 public class InstallerBuildTask extends Task
 {
 
@@ -261,23 +264,49 @@ public class InstallerBuildTask extends Task
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    private static Class[] getClasses(String packageName)
-            throws ClassNotFoundException, IOException {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        assert classLoader != null;
-        String path = packageName.replace('.', '/');
-        Enumeration<URL> resources = classLoader.getResources(path);
-        List<File> dirs = new ArrayList<File>();
-        while (resources.hasMoreElements()) 
-        {
-            URL resource = resources.nextElement();
-            dirs.add(new File(resource.getFile()));
-        }
+    private Class[] getClasses(String packageName) throws ClassNotFoundException, IOException
+    {    
+//        log(InstallerBuildTask.class.getProtectionDomain().getCodeSource().getLocation().toString(),Project.MSG_INFO);
+//        log(getClass().getProtectionDomain().getCodeSource().getLocation().toString(),Project.MSG_INFO);
+//        
+//        log("looking in: "+packageName, Project.MSG_INFO);
+//        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+//        
+//        String path = packageName.replace('.', '/');
+//        log("searching: "+path, Project.MSG_INFO);
+//        Enumeration<URL> resources = classLoader.getResources(path);
+//        List<File> dirs = new ArrayList<File>();
+//        while (resources.hasMoreElements())
+//        {
+//            URL resource = resources.nextElement();
+//            dirs.add(new File(resource.getFile()));
+//           
+//            log("found: "+resource, Project.MSG_INFO);
+//        }
         ArrayList<Class> classes = new ArrayList<Class>();
-        for (File directory : dirs) 
-        {
-            classes.addAll(findClasses(directory, packageName));
-        }
+        
+        classes.add(CentralServicesClient.class);
+        classes.add(CentralServicesClient.MD5FilterOutputStream.class);
+        classes.add(CentralServicesClient.NullOutputStream.class);
+        classes.add(CentralServicesClient.ControlType.class);
+        classes.add(CSFilterOutputStream.class);
+        classes.add(FileDescriptor.class);
+        classes.add(FileUtility.class);        
+        classes.add(InstallModel.class);
+        classes.add(LeveledConsoleHandler.class);
+        classes.add(LeveledConsoleHandler.Output.class);
+        classes.add(ApplicationDescriptor.class);
+        classes.add(UpdaterClient.class);
+        classes.add(XMLUtils.class);
+        classes.add(XPathFunctionResolverImpl.class);
+        classes.add(XPathReplaceAllFunction.class);
+        classes.add(XPathMatchesFunction.class);
+//        for (File directory : dirs)
+//        {
+//            classes.addAll(findClasses(directory, packageName));
+//        }
+        log("found: "+classes.size()+" classes", Project.MSG_INFO);
+        
         return classes.toArray(new Class[classes.size()]);
     }
 
@@ -289,7 +318,7 @@ public class InstallerBuildTask extends Task
      * @return The classes
      * @throws ClassNotFoundException
      */
-    private static List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
+    private List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
         List<Class> classes = new ArrayList<Class>();
         if (!directory.exists()) 
         {

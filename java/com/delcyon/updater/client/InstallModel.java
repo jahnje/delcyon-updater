@@ -131,6 +131,7 @@ public class InstallModel
                 DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
                 documentBuilderFactory.setNamespaceAware(false);
                 documentBuilder = documentBuilderFactory.newDocumentBuilder();
+                System.out.println("loading install document: "+documentPath);
                 URL descriptorURL = UpdaterClient.classLoader.getResource(documentPath);
                 installDocument = documentBuilder.parse(descriptorURL.openStream());
 
