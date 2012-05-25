@@ -1,11 +1,9 @@
 
 
 <project name="Updater Build File" default="dist" basedir="." >
-	<echo>Getting build number from file</echo>
-	<property file="build.number"/>
+	
 	<property name="product.name" value="updater"/>
-	<property name="version" value="${version.major}.${version.minor}"/>
-	<echo>Building version ${version}.${build.number}.${patch.number}</echo>
+	
 	<property name="src.dir" value="./java"/>
 	<property name="build.dir" value="distribution"/>
 	<property name="test.dir" value="tests" />	
@@ -25,9 +23,54 @@
 		</fileset>
 	</path>
 
-	
-	
 
+	<target name="prepTempBuildFile">
+		<echo>Making temp build number file</echo>
+		<copy overwrite="true" tofile="${temp_build_number.file}" file="${build_number.file}" />
+	</target>
+	
+	<target name="prepMajor" depends="prepTempBuildFile">
+		<propertyfile file="${temp_build_number.file}">			
+			<entry key="version.minor" type="int" operation="=" value="0"/>			
+			<entry key="build.number" type="int" operation="=" value="0"/>
+			<entry key="patch.number" type="int" operation="=" value="0"/>
+		</propertyfile>
+		<property name="isMajor" value="true"/>
+		<property name="major.number.operation" value="+"/>
+		<property name="minor.number.operation" value="="/>
+		<property name="build.number.operation" value="="/>
+		<property name="patch.number.operation" value="="/>
+	</target>
+	<target name="prepMinor" depends="prepTempBuildFile">
+		<propertyfile file="${temp_build_number.file}">									
+			<entry key="build.number" type="int" operation="=" value="0"/>
+			<entry key="patch.number" type="int" operation="=" value="0"/>
+		</propertyfile>
+		<property name="isMinor" value="true"/>
+		<property name="major.number.operation" value="="/>
+		<property name="minor.number.operation" value="+"/>
+		<property name="build.number.operation" value="="/>
+		<property name="patch.number.operation" value="="/>
+	</target>
+	<target name="prepBuild" depends="prepTempBuildFile">
+		<propertyfile file="${temp_build_number.file}">												
+			<entry key="patch.number" type="int" operation="=" value="0"/>
+		</propertyfile>
+		<property name="isBuild" value="true"/>
+		<property name="major.number.operation" value="="/>
+		<property name="minor.number.operation" value="="/>
+		<property name="build.number.operation" value="+"/>
+		<property name="patch.number.operation" value="="/>
+	</target>	
+	<target name="prepPatch" depends="prepTempBuildFile">		
+		<property name="isPatch" value="true"/>
+		<property name="major.number.operation" value="="/>
+		<property name="minor.number.operation" value="="/>
+		<property name="build.number.operation" value="="/>
+		<property name="patch.number.operation" value="+"/>
+	</target>
+	
+	
 	
 
 	<!-- this creates the directories for the compiled code -->
@@ -36,28 +79,27 @@
 		<mkdir dir="${build.classes}"/>
 		<mkdir dir="${build.dir}/help"/>
 		
-		<condition property="patch.number.operation" else="=" value="+">
-			<available file="./CVS/Tag"/>
-		</condition>
-		<condition property="build.number.operation" else="+" value="=">
-			<available file="./CVS/Tag" />	
-		</condition>
-		
-		<echo>Making temp build number file</echo>
-		<copy overwrite="true" tofile="${temp_build_number.file}" file="${build_number.file}" />
+	
 		 	
 		<propertyfile file="${temp_build_number.file}">
-			<entry key="version.major" type="int" value="1" />
-			<entry key="version.minor" type="int" value="0" />			
-			<entry key="build.number" type="int" operation="${build.number.operation}"  default="1" />
-			<entry key="patch.number" type="int" operation="${patch.number.operation}"  default="1" />
+			<entry key="version.major" type="int" operation="${major.number.operation}" default="0" />
+			<entry key="version.minor" type="int" operation="${minor.number.operation}" default="0" />			
+			<entry key="build.number" type="int" operation="${build.number.operation}"  default="0" />
+			<entry key="patch.number" type="int" operation="${patch.number.operation}"  default="0" />
 		</propertyfile>
+		<echo>Getting build number from file</echo>
+		
+		<property file="${temp_build_number.file}"/>
+		<property name="version" value="${version.major}.${version.minor}"/>
+		<echo>Building version ${version}.${build.number}.${patch.number}</echo>
+		
 		<echo>Storing version file</echo>
 		<propertyfile file="${resource.dir}/version.properties">
 			<entry key="version.date" type="date" value="now" />
 			<entry key="version" value="${version}.${build.number}.${patch.number}" />
 			<entry key="product.name" value="${product.name}" />
 		</propertyfile>
+		
 	</target>
 
 	
@@ -79,38 +121,26 @@
 		</javac>
 	</target>
 
-	<target name="prepBuild">
-		<property name="isPatch" value="false"/>
-	</target>
 	
-	<target name="prepPatch">
-		<property name="isPatch" value="true"/>
-	</target>
-	<target name="prepMajor">
-		<property name="isMajor" value="true"/>
-	</target>
-	<target name="prepMinor">
-		<property name="isMinor" value="true"/>
-	</target>
 	
 
 
 	<target name="build" depends="prepBuild,create_zip">
-				<antcall inheritall="yes" target="incrementBuildNumber"/>
-			</target>
-			
-			<target name="patch" depends="prepPatch,create_zip">
-				<antcall inheritall="yes" target="incrementBuildNumber"/>
-			</target>
-			
-			<target name="major" depends="prepMajor,create_zip">
-				<antcall inheritall="yes" target="incrementBuildNumber"/>
-			</target>
+		<antcall inheritall="yes" target="incrementBuildNumber"/>
+	</target>
+	
+	<target name="patch" depends="prepPatch,create_zip">
+		<antcall inheritall="yes" target="incrementBuildNumber"/>
+	</target>
+	
+	<target name="major" depends="prepMajor,create_zip">
+		<antcall inheritall="yes" target="incrementBuildNumber"/>
+	</target>
 
-			
-			<target name="minor" depends="prepMinor,create_zip">
-				<antcall inheritall="yes" target="incrementBuildNumber"/>
-			</target>
+	
+	<target name="minor" depends="prepMinor,create_zip">
+		<antcall inheritall="yes" target="incrementBuildNumber"/>
+	</target>
 	
 
 	<!-- This builds the Extractor that goes on the Client machine -->
@@ -119,10 +149,9 @@
 
 	</target>
 
-	<target name="create_zip" depends="create_jar" unless="zipCreated">
-			<antcall inheritall="yes" target="svn_update"/>
-				<property name="zipCreated" value="true"/>
-			</target>
+	<target name="create_zip" depends="create_jar" unless="zipCreated">	
+		<property name="zipCreated" value="true"/>
+	</target>
 	
 	<target name="create_jar" depends="compile">
 		<echo>Building Jar File</echo>
