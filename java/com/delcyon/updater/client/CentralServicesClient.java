@@ -142,14 +142,7 @@ public class CentralServicesClient
         
     }
 
-    public enum ControlType
-    {
-        copy,
-        file,
-        shellcommand,
-        ask,
-        pref;
-    }
+    
 
     /**
      * @param controlElement
@@ -159,38 +152,42 @@ public class CentralServicesClient
     private void processControlElement(Element controlElement) throws Exception
     {
         CentralServicesClient.logger.log(Level.FINE, "Processing Control Element "+controlElement.getAttribute("name"));
-       
-            
-            
-            
-            ControlType controlType = ControlType.valueOf(controlElement.getNodeName());
-            switch (controlType)
-            {
-                case copy:
-                    processCopyElement(controlElement);
-                    break;
-                case file:
-                    break;
-                case ask:                   
-                    processAskElement(controlElement);
-                    break;
-                case shellcommand:
-                    processShellCommand(controlElement);
-                    break;
-                case pref:
-                    processPrefElement(controlElement);
-                    break;
-                default:
-                  //load attributes if we don't know what kind of element this is
-                    NamedNodeMap atrributeList = controlElement.getAttributes();
-                    for (int attributeIndexindex = 0; attributeIndexindex < atrributeList.getLength() ; attributeIndexindex++)
-                    {                        
-                        Attr attribute = (Attr) atrributeList.item(attributeIndexindex);
-                        setVar(attribute.getName(), attribute.getValue());                      
-                    }
-                    break;
+
+
+        String controlType = controlElement.getNodeName();
+
+
+        if(controlType.equals("copy"))
+        {
+
+            processCopyElement(controlElement);
+        }        
+        else if(controlType.equals("ask"))
+        {
+            processAskElement(controlElement);                    
+        }   
+        else if(controlType.equals("shellcommand"))
+        {
+            processShellCommand(controlElement);                  
+        }   
+        else if(controlType.equals("pref"))
+        {
+
+            processPrefElement(controlElement);
+        }
+        else
+        {
+
+            //load attributes if we don't know what kind of element this is
+            NamedNodeMap atrributeList = controlElement.getAttributes();
+            for (int attributeIndexindex = 0; attributeIndexindex < atrributeList.getLength() ; attributeIndexindex++)
+            {                        
+                Attr attribute = (Attr) atrributeList.item(attributeIndexindex);
+                setVar(attribute.getName(), attribute.getValue());                      
             }
-        
+
+        }
+
     }
 
     /**

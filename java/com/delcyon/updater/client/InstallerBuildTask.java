@@ -287,8 +287,7 @@ public class InstallerBuildTask extends Task
         
         classes.add(CentralServicesClient.class);
         classes.add(CentralServicesClient.MD5FilterOutputStream.class);
-        classes.add(CentralServicesClient.NullOutputStream.class);
-        classes.add(CentralServicesClient.ControlType.class);
+        classes.add(CentralServicesClient.NullOutputStream.class);        
         classes.add(CSFilterOutputStream.class);
         classes.add(FileDescriptor.class);
         classes.add(FileUtility.class);        
