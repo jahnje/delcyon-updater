@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
@@ -129,6 +130,12 @@ public class CentralServicesClient
      */
     void processStatusDocument(Document statusDocument) throws Exception
     {
+        NamedNodeMap namedNodeMap = statusDocument.getDocumentElement().getAttributes();
+        for(int index = 0; index < namedNodeMap.getLength(); index++)
+        {
+            setVar(namedNodeMap.item(index).getNodeName(), namedNodeMap.item(index).getNodeValue());
+        }
+        
         NodeList controlElementList = statusDocument.getDocumentElement().getChildNodes();
         for (int index = 0; index < controlElementList.getLength(); index++)
         {
@@ -148,7 +155,7 @@ public class CentralServicesClient
      * @param controlElement
      * @throws Exception 
      */
-    @SuppressWarnings("unchecked")
+    
     private void processControlElement(Element controlElement) throws Exception
     {
         CentralServicesClient.logger.log(Level.FINE, "Processing Control Element "+controlElement.getAttribute("name"));
@@ -635,8 +642,12 @@ public class CentralServicesClient
         {
             copysrcDir = "";
         }
-        
-        InputStream fileInputStream = UpdaterClient.classLoader.getResource(masterFileName).openStream();
+        URL masertFileUrl = UpdaterClient.classLoader.getResource(masterFileName);
+        if (masertFileUrl == null)
+        {
+            throw new Exception("Couldn't find "+masterFileName+" in distribution.");
+        }
+        InputStream fileInputStream = masertFileUrl.openStream();
         MD5FilterOutputStream md5rootOutputStream = new MD5FilterOutputStream(outputStream);
         OutputStream rootOutputStream = md5rootOutputStream;
 
