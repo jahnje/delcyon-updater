@@ -28,7 +28,6 @@ public class XPathFunctionResolverImpl implements XPathFunctionResolver
     /* (non-Javadoc)
      * @see javax.xml.xpath.XPathFunctionResolver#resolveFunction(javax.xml.namespace.QName, int)
      */
-    @Override
     public XPathFunction resolveFunction(QName functionName, int arity)
     {
         if (functionName.getLocalPart().equals("matches"))
@@ -49,7 +48,6 @@ public class XPathFunctionResolverImpl implements XPathFunctionResolver
         /* (non-Javadoc)
          * @see javax.xml.xpath.XPathFunction#evaluate(java.util.List)
          */
-        @Override
         public Object evaluate(List args) throws XPathFunctionException
         {
             String input =  args.get(0).toString();
@@ -66,7 +64,6 @@ public class XPathFunctionResolverImpl implements XPathFunctionResolver
         /* (non-Javadoc)
          * @see javax.xml.xpath.XPathFunction#evaluate(java.util.List)
          */
-        @Override
         public Object evaluate(List args) throws XPathFunctionException
         {
             String input =  args.get(0).toString();
