@@ -268,43 +268,33 @@ public class CentralServicesClient
       
     }
 
-    private void processShellCommand(Element childElement) throws Exception {
-        String ifProperty = childElement.getAttribute("if");
-        if (childElement.hasAttribute("if"))
+    private boolean processShellCommand(Element commandElement) throws Exception {
+        
+        if (commandElement.hasAttribute("if"))
         {
-            if(processingPropertiesHashtable.containsKey(ifProperty))
+            String xpath = processVariablesInString(commandElement.getAttribute("if"),true);            
+            boolean result = XMLUtils.evaluateXPath(commandElement, xpath);
+            CentralServicesClient.logger.log(Level.INFO, "evaluating "+xpath+" "+result);
+            if (result == false)
             {
-                if (processingPropertiesHashtable.get(ifProperty).equals("true") == false)
-                {
-                    if (childElement.hasAttribute("onSkip"))
-                    {
-                        processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
-                    }
-                    CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
-                    return ;
-                }
+                return false;                    
             }
-            else
-            {
-                CentralServicesClient.logger.log(Level.FINE, "Skipping "+ifProperty+" not == true");
-                if (childElement.hasAttribute("onSkip"))
-                {
-                    processingPropertiesHashtable.put(childElement.getAttribute("onSkip"),"true");
-                }
-                return ;
-            }
-        }
-        File workingDir = null;
-        if (childElement.hasAttribute("workingDir") == true)
-        {
-            workingDir = new File(childElement.getAttribute("workingDir"));
         }
         
-        runCommand(childElement.getAttribute("exec"), workingDir);
-        if (childElement.hasAttribute("onAction") == true)
+        
+        File workingDir = null;
+        if (commandElement.hasAttribute("workingDir") == true)
         {
-            processingPropertiesHashtable.put(childElement.getAttribute("onAction"),"true");
+            workingDir = new File(commandElement.getAttribute("workingDir"));
         }
+        
+        runCommand(processVariablesInString(commandElement.getAttribute("exec"),true), workingDir);
+        if (commandElement.hasAttribute("onAction") == true)
+        {
+            processingPropertiesHashtable.put(commandElement.getAttribute("onAction"),"true");
+        }
+        
+        return true;
     }
 
     
