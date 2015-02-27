@@ -25,7 +25,7 @@
 					<include name="**/*.class" />
 				</fileset>						
 			</jar>
-		   <RequiredLibrariesBuildTask propertyname="required.libraries" verbose="true">
+		   <RequiredLibrariesBuildTask propertyname="required.libraries" verbose="true" useRelativePaths="true">
 				<fileset dir=".">
 					<include name="lib/**/*" />
 				</fileset>

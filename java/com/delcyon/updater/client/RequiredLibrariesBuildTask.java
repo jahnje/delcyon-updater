@@ -13,21 +13,24 @@ public class RequiredLibrariesBuildTask extends Task {
 	private Vector<FileSet> filesSetVector = new Vector<FileSet>();
 	private String propertyName = "required.libraries";
 	private boolean verbose = false;
+	private boolean useRelativePaths = false;
 	
 	public void execute() throws BuildException 
 	{
 		String requiredLibraryPropertyString = "";
 		for (FileSet fileSet : filesSetVector) 
 		{
-			DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());		
+			
+			DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());
+			String directoryName = directoryScanner.getBasedir().getName();
 			String[] fileNames = directoryScanner.getIncludedFiles();
 			
 			
 			for (String fileName : fileNames) 
 			{
-				requiredLibraryPropertyString += fileName+" ";
+				requiredLibraryPropertyString += (useRelativePaths ? "../"+directoryName+"/" : "")+fileName+" ";
 				if (verbose == true){
-					log("Adding: "+fileName);
+					log("Adding: "+(useRelativePaths ? "../"+directoryName+"/" : "")+fileName);
 				}
 			}
 		}
@@ -61,5 +64,14 @@ public class RequiredLibrariesBuildTask extends Task {
 		this.verbose = verbose;
 	}
 
+	public final boolean isUseRelativePaths()
+	{
+		return useRelativePaths;
+	}
+	
+	public final void setUseRelativePaths(boolean useRelativePaths)
+	{
+		this.useRelativePaths = useRelativePaths;
+	}
 	
 }
